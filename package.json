@@ -1,0 +1,29 @@
+{
+  "name": "d3-custom-librarys",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "local": "env-cmd -f .env.localhost next dev -p 3040",
+    "build:dev": "env-cmd -f .env.development next build",
+    "start:dev": "env-cmd -f .env.development next start -p 3040",
+    "build": "next build",
+    "start": "next start -p 3040",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@next/font": "13.1.2",
+    "@types/node": "18.11.18",
+    "@types/react": "18.0.27",
+    "@types/react-dom": "18.0.10",
+    "d3": "^7.8.2",
+    "dotenv": "^16.0.3",
+    "env-cmd": "^10.1.0",
+    "eslint": "8.32.0",
+    "eslint-config-next": "13.1.2",
+    "next": "13.1.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "sass": "^1.57.1",
+    "typescript": "4.9.4"
+  }
+}
