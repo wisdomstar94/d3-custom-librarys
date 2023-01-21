@@ -4,7 +4,7 @@ const nextConfig = {
     appDir: true,
   },
   sassOptions: {
-    prependData: `@import "src/styles/globals.scss";`, 
+    prependData: `@import "src/styles/common-variables.scss";`, 
   },
 }
 
