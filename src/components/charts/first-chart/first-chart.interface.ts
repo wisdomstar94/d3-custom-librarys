@@ -3,6 +3,7 @@ import React, { CSSProperties } from "react";
 export declare namespace IFirstChart {
   export interface Data {
     name: string;
+    color: string;
     datas: number[];
   }
 

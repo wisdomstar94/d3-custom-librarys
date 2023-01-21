@@ -1,4 +1,4 @@
-import { max, merge, min, range, scaleLinear, select, zoom, zoomIdentity, zoomTransform } from "d3";
+import { max, merge, min, range, scaleLinear, select, union, zoom, zoomIdentity, zoomTransform } from "d3";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IFirstChart } from "./first-chart.interface";
 import styles from "./first-chart.module.scss";
@@ -53,6 +53,16 @@ export default function FirstChart(props: IFirstChart.Props) {
       yLinear,
     };
   }, [getContainerHeight, options?.data]);
+
+  const getPointDrawMaterials = useCallback(() => {
+    const allNumberDatas = Array.from(union(merge<number>(options?.data.map(x => x.datas) ?? [])));
+    // const pointYConverter = scaleLinear().domain([0, max(allNumberDatas) ?? 0]).range([getContainerHeight() - 60, 20]);
+
+    return {
+      allNumberDatas,
+      yRangeAndLinear: getYRangeAndLinear().yLinear,
+    };
+  }, [getYRangeAndLinear, options?.data]);
 
   const drawBackgroundBorder = useCallback(() => {
     const yrl = getYRangeAndLinear();
@@ -116,9 +126,6 @@ export default function FirstChart(props: IFirstChart.Props) {
   }, [getContainerHeight, options?.xAxis.labels]);
 
   const drawDataPoint = useCallback(() => {
-    const allNumberDatas = merge<number>(options?.data.map(x => x.datas) ?? []);
-    const scaleConverter = scaleLinear().domain([0, max(allNumberDatas) ?? 0]).range([getContainerHeight() - 60, 20]);
-
     options?.data.forEach((item, index) => {
       select(gRef.current)
       .append('g')
@@ -131,12 +138,12 @@ export default function FirstChart(props: IFirstChart.Props) {
         return (i * 60) + 78;
       })
       .attr('cy', (d, i) => {
-        return scaleConverter(d);
+        return getPointDrawMaterials().yRangeAndLinear(d);
       })
-      .attr('fill', '#333')
+      .attr('fill', item.color)
       ;
     });
-  }, [getContainerHeight, options?.data]);
+  }, [getPointDrawMaterials, options?.data]);
 
   const drawDataLine = useCallback(() => {
 
