@@ -38,20 +38,50 @@ export default function FirstChart(props: IFirstChart.Props) {
     return gRef.current.parentElement.clientHeight;
   }, []);
 
-  const drawYaxis = useCallback(() => {
+  const getYRangeAndLinear = useCallback(() => {
     const allNumberDatas = merge<number>(options?.data.map(x => x.datas) ?? []);
     const minNumber = min(allNumberDatas) ?? 0;
     const maxNumber = max(allNumberDatas) ?? 0;
 
     const size = maxNumber - minNumber;
 
-    const yRange = range(minNumber, maxNumber, Math.ceil(size / 4));
-    const yLinear = scaleLinear().domain([minNumber, maxNumber]).range([getContainerHeight() - 60, 0]);
+    const yRange = range(minNumber, maxNumber, Math.ceil(size / 4)).concat(maxNumber);
+    const yLinear = scaleLinear().domain([minNumber, maxNumber]).range([getContainerHeight() - 60, 20]);
+
+    return {
+      yRange,
+      yLinear,
+    };
+  }, [getContainerHeight, options?.data]);
+
+  const drawBackgroundBorder = useCallback(() => {
+    const yrl = getYRangeAndLinear();
 
     select(gRef.current)
     .append('g')
     .selectAll()
-    .data(yRange)
+    .data(yrl.yRange)
+    .enter()
+    .append('rect')
+    .attr("x", (d, i) => {
+      return 40;
+    })
+    .attr("y", (d, i) => {
+      return yrl.yLinear(d);
+    })
+    .attr("width", getContainerWidth() - 40)
+    .attr("height", "1")
+    .attr("fill", "#aaa")
+    ;
+  }, [getContainerWidth, getYRangeAndLinear]);
+
+  const drawYaxis = useCallback(() => {
+    const yrl = getYRangeAndLinear();
+
+    select(gRef.current)
+    .append('g')
+    .selectAll()
+    .data(yrl.yRange)
     .enter()
     .append('text')
     .text(d => d.toString())
@@ -59,12 +89,12 @@ export default function FirstChart(props: IFirstChart.Props) {
       return 20;
     })
     .attr("y", (d, i) => {
-      return yLinear(d);
+      return yrl.yLinear(d) + 3;
     })
     .attr("font-family", "sans-serif")
     .attr("font-size", "10px")
     ;
-  }, [getContainerHeight, options?.data]);
+  }, [getYRangeAndLinear]);
 
   const drawXaxis = useCallback(() => {
     select(gRef.current)
@@ -87,7 +117,7 @@ export default function FirstChart(props: IFirstChart.Props) {
 
   const drawDataPoint = useCallback(() => {
     const allNumberDatas = merge<number>(options?.data.map(x => x.datas) ?? []);
-    const scaleConverter = scaleLinear().domain([0, max(allNumberDatas) ?? 0]).range([getContainerHeight() - 60, 0]);
+    const scaleConverter = scaleLinear().domain([0, max(allNumberDatas) ?? 0]).range([getContainerHeight() - 60, 20]);
 
     options?.data.forEach((item, index) => {
       select(gRef.current)
@@ -117,20 +147,21 @@ export default function FirstChart(props: IFirstChart.Props) {
       return;
     }
 
-    const _zoom = zoom<any, any>().on("zoom", function zoom_actions(){
-      this.setAttribute("transform", zoomTransform(this).toString());
-    });
-    const g = select(gRef.current);
-    g
-    .call(_zoom)
-    .call(_zoom.transform, zoomIdentity)
-    ;
+    // const _zoom = zoom<any, any>().on("zoom", function zoom_actions(){
+    //   this.setAttribute("transform", zoomTransform(this).toString());
+    // });
+    // const g = select(gRef.current);
+    // g
+    // .call(_zoom)
+    // .call(_zoom.transform, zoomIdentity)
+    // ;
 
+    drawBackgroundBorder();
     drawYaxis();
     drawXaxis();
     drawDataPoint();
     drawDataLine();
-  }, [drawDataLine, drawDataPoint, drawXaxis]);
+  }, [drawBackgroundBorder, drawDataLine, drawDataPoint, drawXaxis, drawYaxis]);
 
   return (
     <>
