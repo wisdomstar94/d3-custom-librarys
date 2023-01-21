@@ -1,4 +1,4 @@
-import { max, merge, min, range, scaleLinear, select, union, zoom, zoomIdentity, zoomTransform } from "d3";
+import { line, max, merge, min, range, scaleLinear, select, union, zoom, zoomIdentity, zoomTransform } from "d3";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IFirstChart } from "./first-chart.interface";
 import styles from "./first-chart.module.scss";
@@ -46,7 +46,7 @@ export default function FirstChart(props: IFirstChart.Props) {
     const size = maxNumber - minNumber;
 
     const yRange = range(minNumber, maxNumber, Math.ceil(size / 4)).concat(maxNumber);
-    const yLinear = scaleLinear().domain([minNumber, maxNumber]).range([getContainerHeight() - 60, 20]);
+    const yLinear = scaleLinear().domain([minNumber, maxNumber]).range([getContainerHeight() - 120, 20]);
 
     return {
       yRange,
@@ -118,7 +118,7 @@ export default function FirstChart(props: IFirstChart.Props) {
       return (i * 60) + 60;
     })
     .attr("y", (d, i) => {
-      return getContainerHeight() - 30;
+      return getContainerHeight() - 90;
     })
     .attr("font-family", "sans-serif")
     .attr("font-size", "10px")
@@ -146,8 +146,22 @@ export default function FirstChart(props: IFirstChart.Props) {
   }, [getPointDrawMaterials, options?.data]);
 
   const drawDataLine = useCallback(() => {
-
-  }, []);
+    options?.data.forEach((item, index) => {
+      const lineGenerator = line();
+      const points: [number, number][] = item.datas.map((x, i) => {
+        return [(i * 60) + 78, getPointDrawMaterials().yRangeAndLinear(x)];
+      });
+      console.log('@@points', points);
+      const pathOfLine = lineGenerator(points);
+      select(gRef.current)
+      .append('path')
+      .attr('d', pathOfLine)
+      .attr('stroke-width', 1)
+      .attr("fill", 'none')
+      .attr("stroke", item.color)
+      ;
+    });
+  }, [getPointDrawMaterials, options?.data]);
 
   const draw = useCallback(() => {
     if (gRef.current === null) {
