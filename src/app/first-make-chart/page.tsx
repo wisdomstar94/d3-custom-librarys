@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 const FirstMakeChartPage = () => {
   const [options, setOptions] = useState<IFirstChart.Options>({
     data: [
-
+      {
+        name: 'Angular 다운로드 수',
+        datas: [10, 30, 40, 20, 70, 40, 100, 50, 120, 70],
+      },
     ],
     xAxis: {
       labels: [
@@ -21,6 +24,24 @@ const FirstMakeChartPage = () => {
         },
         {
           text: '2023-01',
+        },
+        {
+          text: '2023-02',
+        },
+        {
+          text: '2023-03',
+        },
+        {
+          text: '2023-04',
+        },
+        {
+          text: '2023-05',
+        },
+        {
+          text: '2023-06',
+        },
+        {
+          text: '2023-07',
         },
       ],
     },
