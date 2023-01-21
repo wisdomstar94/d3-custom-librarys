@@ -1,6 +1,6 @@
 import ContentArea from '@/components/layouts/content-area/content-area.component';
 import SideBar from '@/components/layouts/side-bar/side-bar.component';
-import '../styles/globals.scss';
+import '@/styles/globals.scss';
 
 export default function RootLayout({
   children,
