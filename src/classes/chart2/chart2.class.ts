@@ -5,11 +5,13 @@ const defaultConfig = {
   yLabelAreaWidth: 60,
   xLabelAreaHeight: 90,
   topAreaHeight: 40,
+  dataLabelAreaHeight: 80,
 };
 
 export class Chart2 {
   targetElementId?: string;
   topAreaHeight?: number;
+  dataLabelAreaHeight?: number;
   yLabelAreaWidth?: number;
   xLabelAreaHeight?: number;
   data?: IChart2.Data[];
@@ -19,6 +21,7 @@ export class Chart2 {
   constructor(params?: IChart2.ConstructorParams) {
     this.targetElementId = params?.targetElementId;
     this.topAreaHeight = params?.topAreaHeight;
+    this.dataLabelAreaHeight = params?.dataLabelAreaHeight;
     this.yLabelAreaWidth = params?.yLabelAreaWidth;
     this.xLabelAreaHeight = params?.xLabelAreaHeight;
     this.data = params?.data;
@@ -36,6 +39,11 @@ export class Chart2 {
 
   setTopAreaHeight(v: number): Chart2 {
     this.topAreaHeight = v;
+    return this;
+  }
+
+  setDataLabelAreaHeight(v: number): Chart2 {
+    this.dataLabelAreaHeight = v;
     return this;
   }
 
@@ -105,6 +113,14 @@ export class Chart2 {
     return this.topAreaHeight;
   }
 
+  getDataLabelAreaHeight(): number {
+    if (this.dataLabelAreaHeight === undefined) {
+      console.warn(`dataLabelAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataLabelAreaHeight} 으로 적용됩니다.`);
+      return defaultConfig.dataLabelAreaHeight;
+    }
+    return this.dataLabelAreaHeight;
+  }
+
   getYLabelAreaWidth(): number {
     if (this.yLabelAreaWidth === undefined) {
       console.warn(`yLabelAreaWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.yLabelAreaWidth} 으로 적용됩니다.`);
@@ -147,25 +163,129 @@ export class Chart2 {
     }
 
     const htmlString = `
-      <div id="chart-container" style="width: 100%; height: 100%; position: relative; display: flex;">
-        <div id="container-left-area" style="width: ${this.getYLabelAreaWidth()}px; height: 100%; position: relative; display: block;">
-          <div id="chart-y-axis-display-area" style="width: 100%; height: calc(100% - (${this.getTopAreaHeight()}px + ${this.getXLabelAreaHeight()}px)); position: relative; margin-top: ${this.getTopAreaHeight()}px">
+      <div id="chart-container">
+        <div id="top-row-area">
+
+        </div>
+        <div id="left-area">
+          <div id="y-axis-display-area">
 
           </div>
         </div>
-        <div id="container-right-area" style="width: calc(100% - ${this.getYLabelAreaWidth()}px); height: 100%; position: relative; display: block;">
-          <div id="right-top-area" style="width: 100%; height: ${this.getTopAreaHeight()}px; position: relative;">
+        <div id="right-area">
+          <div id="chart-display-area">
 
           </div>
-          <div id="chart-display-area" style="width: 100%; height: calc(100% - (${this.getTopAreaHeight()}px + ${this.getXLabelAreaHeight()}px)); position: relative;">
+          <div id="x-axis-display-area">
 
           </div>
-          <div id="right-bottom-area" style="width: 100%; height: ${this.getXLabelAreaHeight()}px; position: relative;">
+        </div>
+        <div id="bottom-row-area">
 
-          </div>
         </div>
       </div>
+      <style>
+        #chart-container {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          position: relative;
+        }
+        #chart-container #top-row-area {
+          width: 100%;
+          height: ${this.getTopAreaHeight()}px;
+          display: block;
+          position: relative;
+        }
+        #chart-container #left-area {
+          width: ${this.getYLabelAreaWidth()}px;
+          height: calc(100% - (${this.getTopAreaHeight()}px + ${this.getDataLabelAreaHeight()}px));
+          display: block;
+          position: relative;
+        }
+        #chart-container #left-area #y-axis-display-area {
+          width: 100%;
+          height: calc(100% - ${this.getXLabelAreaHeight()}px);
+          display: block;
+          position: relative;
+        }
+        #chart-container #right-area {
+          width: calc(100% - ${this.getYLabelAreaWidth()}px);
+          height: calc(100% - (${this.getTopAreaHeight()}px + ${this.getDataLabelAreaHeight()}px));
+          display: block;
+          position: relative;
+          overflow-x: scroll;
+        }
+        #chart-container #right-area::-webkit-scrollbar {
+          width: 0;
+          height: 1px;
+        }
+        #chart-container #right-area::-webkit-scrollbar-track {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
+        #chart-container #right-area::-webkit-scrollbar-thumb {
+          background-color: rgba(0, 0, 0, 0.3);
+        }
+        #chart-container #right-area #chart-display-area {
+          width: 100%;
+          height: calc(100% - ${this.getXLabelAreaHeight()}px);
+          display: block;
+          position: relative;
+        }
+        #chart-container #right-area #x-axis-display-area {
+          width: 100%;
+          height: ${this.getXLabelAreaHeight()}px;
+          display: block;
+          position: relative;
+        }
+        #chart-container #bottom-row-area {
+          width: 100%;
+          height: ${this.getDataLabelAreaHeight()}px;
+          display: block;
+          position: relative;
+        }
+
+        
+      </style>
     `.trim();
+    // const htmlString = `
+    //   <div id="chart-container" style="width: 100%; height: 100%; position: relative; display: flex;">
+    //     <div id="container-left-area" style="width: ${this.getYLabelAreaWidth()}px; height: 100%; position: relative; display: block;">
+    //       <div id="chart-y-axis-display-area" style="width: 100%; height: calc(100% - (${this.getTopAreaHeight()}px + ${this.getXLabelAreaHeight()}px)); position: relative; margin-top: ${this.getTopAreaHeight()}px">
+
+    //       </div>
+    //     </div>
+    //     <div id="container-right-area" style="width: calc(100% - ${this.getYLabelAreaWidth()}px); height: 100%; position: relative; display: block;">
+    //       <div id="right-top-area" style="width: 100%; height: ${this.getTopAreaHeight()}px; position: relative;">
+
+    //       </div>
+    //       <div id="scroll-area" style="width: 100%; height: calc(100% - (${this.getTopAreaHeight()}px + ${this.getDataLabelAreaHeight()}px)); position: relative; overflow-x: scroll;">
+    //         <div id="chart-display-area" style="">
+
+    //         </div>
+    //         <div>
+
+    //         </div>
+    //       </div>
+    //       <div id="data-label-area" style="width: 100%; height: ${this.getDataLabelAreaHeight()}px; position: relative;">
+
+    //       </div>
+    //     </div>
+    //   </div>
+    //   <style>
+    //     #chart-container #container-right-area #scroll-area::-webkit-scrollbar {
+    //       width: 0;
+    //       height: 1px;
+    //     }
+    //     #chart-container #container-right-area #scroll-area::-webkit-scrollbar-track {
+    //       background-color: rgba(0, 0, 0, 0.05);
+    //     }
+    //     #chart-container #container-right-area #scroll-area::-webkit-scrollbar-thumb {
+    //       background-color: rgba(0, 0, 0, 0.3);
+    //     }
+    //   </style>
+    // `.trim();
     target.innerHTML = htmlString;
   }
 
