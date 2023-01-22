@@ -22,6 +22,7 @@ export declare namespace IChart2 {
 
   export interface ConstructorParams {
     targetElementId: string;
+    topAreaHeight?: number;
     yLabelAreaWidth?: number;
     xLabelAreaHeight?: number;
     data?: Data[];
