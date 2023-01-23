@@ -8,6 +8,7 @@ const targetIdNames = {
   leftArea: 'id_' + v4(),
   yAxisDisplayArea: 'id_' + v4(),
   rightArea: 'id_' + v4(),
+  rightAreaContentArea: 'id_' + v4(),
   chartDisplayArea: 'id_' + v4(),
   xAxisDisplayArea: 'id_' + v4(),
   bottomRowArea: 'id_' + v4(),
@@ -204,6 +205,10 @@ export class Chart2 {
     return document.querySelector<HTMLDivElement>(`#${targetIdNames.rightArea}`);
   }
 
+  getRightAreaContentAreaElement(): HTMLDivElement | null {
+    return document.querySelector<HTMLDivElement>(`#${targetIdNames.rightAreaContentArea}`);
+  }
+
   getChartDisplayAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetIdNames.chartDisplayArea}`);
   }
@@ -236,11 +241,13 @@ export class Chart2 {
           </div>
         </div>
         <div id="${targetIdNames.rightArea}" data-id="right-area">
-          <div id="${targetIdNames.chartDisplayArea}" data-id="chart-display-area">
+          <div id="${targetIdNames.rightAreaContentArea}" data-id="right-area-content-area">
+            <div id="${targetIdNames.chartDisplayArea}" data-id="chart-display-area">
 
-          </div>
-          <div id="${targetIdNames.xAxisDisplayArea}" data-id="x-axis-display-area">
+            </div>
+            <div id="${targetIdNames.xAxisDisplayArea}" data-id="x-axis-display-area">
 
+            </div>
           </div>
         </div>
         <div id="${targetIdNames.bottomRowArea}" data-id="bottom-row-area">
@@ -289,6 +296,13 @@ export class Chart2 {
         }
         #${targetIdNames.rightArea}::-webkit-scrollbar-thumb {
           background-color: rgba(0, 0, 0, 0.3);
+        }
+        #${targetIdNames.rightAreaContentArea} {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          position: relative;
         }
         #${targetIdNames.chartDisplayArea} {
           width: 100%;
