@@ -7,10 +7,13 @@ const targetElementNames = {
   topRowArea: 'id_' + v4(),
   leftArea: 'id_' + v4(),
   yAxisDisplayArea: 'id_' + v4(),
+  yAxisDisplayAreaSvg: 'id_' + v4(),
   rightArea: 'id_' + v4(),
   rightAreaContentArea: 'id_' + v4(),
   chartDisplayArea: 'id_' + v4(),
+  chartDisplayAreaSvg: 'id_' + v4(),
   xAxisDisplayArea: 'id_' + v4(),
+  xAxisDisplayAreaSvg: 'id_' + v4(),
   bottomRowArea: 'id_' + v4(),
 
   svg: 'class_' + v4(),
@@ -203,6 +206,10 @@ export class Chart2 {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.yAxisDisplayArea}`);
   }
 
+  getYAxisDisplayAreaSvgElement(): SVGElement | null {
+    return document.querySelector<SVGElement>(`#${targetElementNames.yAxisDisplayAreaSvg}`);
+  }
+
   getRightAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.rightArea}`);
   }
@@ -215,8 +222,16 @@ export class Chart2 {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.chartDisplayArea}`);
   }
 
+  getChartDisplayAreaSvgElement(): SVGElement | null {
+    return document.querySelector<SVGElement>(`#${targetElementNames.chartDisplayAreaSvg}`);
+  }
+
   getXAxisDisplayAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.xAxisDisplayArea}`);
+  }
+
+  getXAxisDisplayAreaSvgElement(): SVGElement | null {
+    return document.querySelector<SVGElement>(`#${targetElementNames.xAxisDisplayAreaSvg}`);
   }
 
   getBottomRowAreaElement(): HTMLDivElement | null {
