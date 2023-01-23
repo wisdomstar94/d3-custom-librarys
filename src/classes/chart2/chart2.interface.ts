@@ -26,6 +26,7 @@ export declare namespace IChart2 {
     dataLabelAreaHeight?: number;
     yLabelAreaWidth?: number;
     xLabelAreaHeight?: number;
+    dataOneColumnWidth?: number;
     data?: Data[];
     xAxis?: XAxis;
     yAxis?: YAxis;
