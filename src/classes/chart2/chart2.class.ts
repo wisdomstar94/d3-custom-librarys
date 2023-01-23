@@ -2,7 +2,7 @@ import { extent, merge, range, scaleLinear, select } from "d3";
 import { IChart2 } from "./chart2.interface";
 import { v4 } from 'uuid';
 
-const targetIdNames = {
+const targetElementNames = {
   chartContainer: 'id_' + v4(),
   topRowArea: 'id_' + v4(),
   leftArea: 'id_' + v4(),
@@ -12,6 +12,8 @@ const targetIdNames = {
   chartDisplayArea: 'id_' + v4(),
   xAxisDisplayArea: 'id_' + v4(),
   bottomRowArea: 'id_' + v4(),
+
+  svg: 'class_' + v4(),
 };
 
 const defaultConfig = {
@@ -186,39 +188,39 @@ export class Chart2 {
     Getter Element Function
   */
   getChartContainerElement(): HTMLDivElement | null {
-    return document.querySelector<HTMLDivElement>(`#${targetIdNames.chartContainer}`);
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.chartContainer}`);
   }
 
   getTopRowAreaElement(): HTMLDivElement | null {
-    return document.querySelector<HTMLDivElement>(`#${targetIdNames.topRowArea}`);
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.topRowArea}`);
   }
 
   getLeftAreaElement(): HTMLDivElement | null {
-    return document.querySelector<HTMLDivElement>(`#${targetIdNames.leftArea}`);
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.leftArea}`);
   }
 
   getYAxisDisplayAreaElement(): HTMLDivElement | null {
-    return document.querySelector<HTMLDivElement>(`#${targetIdNames.yAxisDisplayArea}`);
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.yAxisDisplayArea}`);
   }
 
   getRightAreaElement(): HTMLDivElement | null {
-    return document.querySelector<HTMLDivElement>(`#${targetIdNames.rightArea}`);
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.rightArea}`);
   }
 
   getRightAreaContentAreaElement(): HTMLDivElement | null {
-    return document.querySelector<HTMLDivElement>(`#${targetIdNames.rightAreaContentArea}`);
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.rightAreaContentArea}`);
   }
 
   getChartDisplayAreaElement(): HTMLDivElement | null {
-    return document.querySelector<HTMLDivElement>(`#${targetIdNames.chartDisplayArea}`);
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.chartDisplayArea}`);
   }
 
   getXAxisDisplayAreaElement(): HTMLDivElement | null {
-    return document.querySelector<HTMLDivElement>(`#${targetIdNames.xAxisDisplayArea}`);
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.xAxisDisplayArea}`);
   }
 
   getBottomRowAreaElement(): HTMLDivElement | null {
-    return document.querySelector<HTMLDivElement>(`#${targetIdNames.bottomRowArea}`);
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.bottomRowArea}`);
   }
 
   /*
@@ -231,95 +233,107 @@ export class Chart2 {
     }
 
     const htmlString = `
-      <div id="${targetIdNames.chartContainer}" data-id="chart-container">
-        <div id="${targetIdNames.topRowArea}" data-id="top-row-area">
+      <div id="${targetElementNames.chartContainer}" data-id="chart-container">
+        <div id="${targetElementNames.topRowArea}" data-id="top-row-area">
 
         </div>
-        <div id="${targetIdNames.leftArea}" data-id="left-area">
-          <div id="${targetIdNames.yAxisDisplayArea}" data-id="y-axis-display-area">
+        <div id="${targetElementNames.leftArea}" data-id="left-area">
+          <div id="${targetElementNames.yAxisDisplayArea}" data-id="y-axis-display-area">
+            <svg class="${targetElementNames.svg}">
 
+            </svg>
           </div>
         </div>
-        <div id="${targetIdNames.rightArea}" data-id="right-area">
-          <div id="${targetIdNames.rightAreaContentArea}" data-id="right-area-content-area">
-            <div id="${targetIdNames.chartDisplayArea}" data-id="chart-display-area">
+        <div id="${targetElementNames.rightArea}" data-id="right-area">
+          <div id="${targetElementNames.rightAreaContentArea}" data-id="right-area-content-area">
+            <div id="${targetElementNames.chartDisplayArea}" data-id="chart-display-area">
+              <svg class="${targetElementNames.svg}">
 
+              </svg>
             </div>
-            <div id="${targetIdNames.xAxisDisplayArea}" data-id="x-axis-display-area">
+            <div id="${targetElementNames.xAxisDisplayArea}" data-id="x-axis-display-area">
+              <svg class="${targetElementNames.svg}">
 
+              </svg>
             </div>
           </div>
         </div>
-        <div id="${targetIdNames.bottomRowArea}" data-id="bottom-row-area">
+        <div id="${targetElementNames.bottomRowArea}" data-id="bottom-row-area">
 
         </div>
       </div>
       <style>
-        #${targetIdNames.chartContainer} {
+        #${targetElementNames.chartContainer} {
           width: 100%;
           height: 100%;
           display: flex;
           flex-wrap: wrap;
           position: relative;
         }
-        #${targetIdNames.topRowArea} {
+        #${targetElementNames.topRowArea} {
           width: 100%;
           height: ${this.getTopAreaHeight()}px;
           display: block;
           position: relative;
         }
-        #${targetIdNames.leftArea} {
+        #${targetElementNames.leftArea} {
           width: ${this.getYLabelAreaWidth()}px;
           height: calc(100% - (${this.getTopAreaHeight()}px + ${this.getDataLabelAreaHeight()}px));
           display: block;
           position: relative;
         }
-        #${targetIdNames.yAxisDisplayArea} {
+        #${targetElementNames.yAxisDisplayArea} {
           width: 100%;
           height: calc(100% - ${this.getXLabelAreaHeight()}px);
           display: block;
           position: relative;
         }
-        #${targetIdNames.rightArea} {
+        #${targetElementNames.rightArea} {
           width: calc(100% - ${this.getYLabelAreaWidth()}px);
           height: calc(100% - (${this.getTopAreaHeight()}px + ${this.getDataLabelAreaHeight()}px));
           display: block;
           position: relative;
           overflow-x: scroll;
         }
-        #${targetIdNames.rightArea}::-webkit-scrollbar {
+        #${targetElementNames.rightArea}::-webkit-scrollbar {
           width: 0;
           height: 1px;
         }
-        #${targetIdNames.rightArea}::-webkit-scrollbar-track {
+        #${targetElementNames.rightArea}::-webkit-scrollbar-track {
           background-color: rgba(0, 0, 0, 0.05);
         }
-        #${targetIdNames.rightArea}::-webkit-scrollbar-thumb {
+        #${targetElementNames.rightArea}::-webkit-scrollbar-thumb {
           background-color: rgba(0, 0, 0, 0.3);
         }
-        #${targetIdNames.rightAreaContentArea} {
+        #${targetElementNames.rightAreaContentArea} {
           width: 100%;
           height: 100%;
           display: flex;
           flex-wrap: wrap;
           position: relative;
         }
-        #${targetIdNames.chartDisplayArea} {
+        #${targetElementNames.chartDisplayArea} {
           width: 100%;
           height: calc(100% - ${this.getXLabelAreaHeight()}px);
           display: block;
           position: relative;
         }
-        #${targetIdNames.xAxisDisplayArea} {
+        #${targetElementNames.xAxisDisplayArea} {
           width: 100%;
           height: ${this.getXLabelAreaHeight()}px;
           display: block;
           position: relative;
         }
-        #${targetIdNames.bottomRowArea} {
+        #${targetElementNames.bottomRowArea} {
           width: 100%;
           height: ${this.getDataLabelAreaHeight()}px;
           display: block;
+          position: relative;
+        }
+
+        .${targetElementNames.svg} {
+          width: 100%;
+          height: 100%;
           position: relative;
         }
       </style>
