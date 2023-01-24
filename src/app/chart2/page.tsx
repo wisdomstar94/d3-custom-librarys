@@ -9,6 +9,7 @@ const FirstMakeChartPage = () => {
     myChart2
       .setTargetElementId('#target')
       .setXAxis({
+        unit: '날짜',
         labels: [
           { text: '2022-10' },
           { text: '2022-11' },

@@ -20,6 +20,7 @@ export declare namespace IChart2 {
   }
 
   export interface XAxis {
+    unit?: string;
     labels: Label[];
   }
 

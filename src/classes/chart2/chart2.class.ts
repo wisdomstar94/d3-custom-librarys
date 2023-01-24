@@ -21,6 +21,7 @@ const targetElementNames = {
   clipBoxArea: 'id_' + v4(),
   clipBoxAreaTopRow: 'id_' + v4(),
   clipBoxAreaBottomRow: 'id_' + v4(),
+  xAxisUnitArea: 'id_' + v4(),
 
   show: 'class_' + v4(),
   active: 'class_' + v4(),
@@ -426,6 +427,10 @@ export class Chart2 {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.clipBoxAreaBottomRow}`);
   }
 
+  private getXAxisUnitAreaElement(): HTMLDivElement | null {
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.xAxisUnitArea}`);
+  }
+
   /*
     callback Functions
   */
@@ -580,6 +585,9 @@ export class Chart2 {
           </div>
         </div>
         <div id="${targetElementNames.bottomRowArea}" data-id="bottom-row-area">
+          <div id="${targetElementNames.xAxisUnitArea}" data-id="x-axis-unit-area">
+
+          </div>
           <div id="${targetElementNames.bottomRowAreaDataLabelNamesArea}" data-id="bottom-row-area-data-label-names-area">
             
           </div>
@@ -705,6 +713,16 @@ export class Chart2 {
           justify-content: center;
           align-items: center;
           align-content: center;
+        }
+        #${targetElementNames.xAxisUnitArea} {
+          position: absolute;
+          top: 6px;
+          right: 8px;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          font-size: ${defaultConfig.fontSize};
+          color: ${defaultConfig.fontGrayColor};
         }
 
         .${targetElementNames.svg} {
@@ -949,6 +967,11 @@ export class Chart2 {
       `.trim();
     });
     targetElement.innerHTML = htmlString;
+
+    const xAxisUnitAreaElement = this.getXAxisUnitAreaElement();
+    if (xAxisUnitAreaElement !== null) {
+      xAxisUnitAreaElement.textContent = this.xAxis?.unit ?? '';
+    }
   }
 
   private drawDataJoint(): void {
