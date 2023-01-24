@@ -27,6 +27,7 @@ export declare namespace IChart2 {
     yLabelAreaWidth?: number;
     xLabelAreaHeight?: number;
     dataOneColumnWidth?: number;
+    dataJointAreaWidth?: number;
     topBottomMarginHeight?: number;
     chartLeftMarginWidth?: number;
     initTransitionDuration?: number;

@@ -1,4 +1,4 @@
-import { easeBackOut, extent, line, merge, range, scaleLinear, select, transition, union } from "d3";
+import { easeBackOut, extent, index, line, merge, pointers, range, scaleLinear, select, union } from "d3";
 import { IChart2 } from "./chart2.interface";
 import { v4 } from 'uuid';
 
@@ -17,9 +17,17 @@ const targetElementNames = {
   xAxisDisplayArea: 'id_' + v4(),
   xAxisDisplayAreaSvg: 'id_' + v4(),
   bottomRowArea: 'id_' + v4(),
+  clipBoxArea: 'id_' + v4(),
+  clipBoxAreaTopRow: 'id_' + v4(),
+  clipBoxAreaBottomRow: 'id_' + v4(),
 
+  show: 'class_' + v4(),
+  overflowVisible: 'class_' + v4(),
   svg: 'class_' + v4(),
   topBottomMarginBottom: 'class_' + v4(),
+  clipDataRow: 'class_' + v4(),
+  clipDataRowTitleArea: 'class_' + v4(),
+  clipDataRowContentArea: 'class_' + v4(),
 };
 
 const defaultConfig = {
@@ -30,7 +38,9 @@ const defaultConfig = {
   dataLabelAreaHeight: 80,
   chartLeftMarginWidth: 30,
   dataOneColumnWidth: 60,
+  dataJointAreaWidth: 20,
   color: '#333',
+  fontColor: '#333',
   initTransitionDuration: 1000,
 };
 defaultConfig.chartLeftMarginWidth = defaultConfig.dataOneColumnWidth / 2;
@@ -42,12 +52,15 @@ export class Chart2 {
   yLabelAreaWidth?: number;
   xLabelAreaHeight?: number;
   dataOneColumnWidth?: number;
+  dataJointAreaWidth?: number;
   topBottomMarginHeight?: number;
   chartLeftMarginWidth?: number;
   initTransitionDuration?: number;
   data?: IChart2.Data[];
   xAxis?: IChart2.XAxis;
   yAxis?: IChart2.YAxis;
+
+  // currentChartDisplayPointer?: { x: number; y: number; };
 
   constructor(params?: IChart2.ConstructorParams) {
     this.targetElementId = params?.targetElementId;
@@ -56,6 +69,7 @@ export class Chart2 {
     this.yLabelAreaWidth = params?.yLabelAreaWidth;
     this.xLabelAreaHeight = params?.xLabelAreaHeight;
     this.dataOneColumnWidth = params?.dataOneColumnWidth;
+    this.dataJointAreaWidth = params?.dataJointAreaWidth;
     this.topBottomMarginHeight = params?.topBottomMarginHeight;
     this.chartLeftMarginWidth = params?.chartLeftMarginWidth;
     this.initTransitionDuration = params?.initTransitionDuration;
@@ -102,6 +116,11 @@ export class Chart2 {
     return this;
   }
 
+  setDataJointAreaWidth(v: number): Chart2 {
+    this.dataJointAreaWidth = v;
+    return this;
+  }
+
   setData(v: IChart2.Data[]): Chart2 {
     this.data = v;
     return this;
@@ -121,6 +140,13 @@ export class Chart2 {
     this.initTransitionDuration = v;
     return this;
   }
+
+  // private setCurrentChartDisplayPointer(x: number, y: number): void {
+  //   this.currentChartDisplayPointer = {
+  //     x,
+  //     y,
+  //   };
+  // }
 
   /*
     Getter Functions
@@ -200,6 +226,14 @@ export class Chart2 {
     return element === null ? 0 : element.clientHeight;
   }
 
+  private getDataJointAreaWidth(): number {
+    if (this.dataJointAreaWidth === undefined) {
+      console.warn(`dataJointAreaWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataJointAreaWidth} 으로 적용됩니다.`);
+      return defaultConfig.dataJointAreaWidth;
+    }
+    return this.dataJointAreaWidth;
+  }
+
   private getTopBottomMarginHeight(): number {
     if (this.topBottomMarginHeight === undefined) {
       console.warn(`topBottomMarginHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.topBottomMarginHeight} 으로 적용됩니다.`);
@@ -263,6 +297,36 @@ export class Chart2 {
     return this.initTransitionDuration;
   }
 
+  private getOffsetPointer(event: MouseEvent | TouchEvent) {
+    const pointer = {
+      x: 0,
+      y: 0,
+    };
+
+    if (event instanceof MouseEvent) {
+      pointer.x = event.offsetX;
+      pointer.y = event.offsetY;
+    } else {
+      pointer.x = event.touches[0].pageX;
+      pointer.y = event.touches[0].pageY;
+    }
+
+    return pointer;
+  }
+
+  getMouseOveredDataJointAreaOffsetLeft(event: MouseEvent | TouchEvent): number {
+    const rightAreaElement = this.getRightAreaElement();
+    if (rightAreaElement === null) {
+      return 0;
+    }
+    const scrollLeft = rightAreaElement.scrollLeft;
+
+    const target = event.target as HTMLElement;
+    const offsetLeft = target.offsetLeft;
+
+    return offsetLeft - scrollLeft;
+  }
+
   /*
     Getter Element Function
   */
@@ -314,6 +378,92 @@ export class Chart2 {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.bottomRowArea}`);
   }
 
+  private getClipBoxAreaElement(): HTMLDivElement | null {
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.clipBoxArea}`);
+  }
+
+  private getClipBoxAreaTopRowElement(): HTMLDivElement | null {
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.clipBoxAreaTopRow}`);
+  }
+
+  private getClipBoxAreaBottomRowElement(): HTMLDivElement | null {
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.clipBoxAreaBottomRow}`);
+  }
+
+  /*
+    callback Functions
+  */
+  private callbackDataJoinMouseEvent<T>(event: MouseEvent | TouchEvent, d: IChart2.Label): void {
+    const elem = event.target as HTMLElement;
+    const index = Number(elem.getAttribute('data-index'));
+    const left = Number(elem.style.left.split('px')[0]);
+    const clipBoxAreaElement = this.getClipBoxAreaElement();
+    const pointer = this.getOffsetPointer(event);
+
+    const indexDatas = this.data?.map((x) => {
+      return {
+        name: x.name,
+        color: x.color,
+        data: x.datas.find((value, i) => i === index),
+      };
+    });
+
+    // left 계산
+    const getLeft = (): number => {
+      const offsetLeft = this.getMouseOveredDataJointAreaOffsetLeft(event);
+      console.log('offsetLeft', offsetLeft);
+      console.log(`(this.getChartDisplayAreaElement()?.clientWidth ?? 0)`, (this.getChartDisplayAreaElement()?.clientWidth ?? 0));
+      if (offsetLeft < (this.getChartDisplayAreaElement()?.clientWidth ?? 0) / 2) {
+        return left + 20;
+      } else {
+        return left - ((this.getClipBoxAreaElement()?.clientWidth ?? 0));
+      }
+    };
+
+    if (clipBoxAreaElement !== null) {
+      if (event.type === 'mouseenter') {
+        // left 계산하기
+        clipBoxAreaElement.classList.add(targetElementNames.show);
+        clipBoxAreaElement.style.left = getLeft() + 'px';
+
+        const clipBoxAreaTopRowElement = this.getClipBoxAreaTopRowElement();
+        if (clipBoxAreaTopRowElement !== null) {
+          clipBoxAreaTopRowElement.textContent = d.text;
+          clipBoxAreaTopRowElement.style.color = d.color ?? defaultConfig.fontColor;
+        }
+
+        const clipBoxAreaBottomRowElement = this.getClipBoxAreaBottomRowElement();
+        if (clipBoxAreaBottomRowElement !== null) {
+          let htmlString = ``;
+          indexDatas?.forEach((item, i) => {
+            htmlString += `
+              <div class="${targetElementNames.clipDataRow}">
+                <div class="${targetElementNames.clipDataRowTitleArea}" style="color: ${item.color ?? defaultConfig.fontColor};">
+                  ${item.name}
+                </div>
+                <div class="${targetElementNames.clipDataRowContentArea}" style="color: ${item.color ?? defaultConfig.fontColor};">
+                  ${item.data}
+                </div>
+              </div>
+            `.trim();
+          });
+          clipBoxAreaBottomRowElement.innerHTML = htmlString;
+        }
+      } else if (event.type === 'mousemove') {
+        clipBoxAreaElement.style.top = pointer.y + 'px'; 
+      }
+    }
+  }
+
+  private callbackChartDisplayMouseEvent(event: MouseEvent): void {
+    const clipBoxAreaElement = this.getClipBoxAreaElement();
+    if (clipBoxAreaElement !== null) {
+      if (event.type === 'mouseleave') {
+        clipBoxAreaElement.classList.remove(targetElementNames.show);
+      } 
+    }
+  }
+
   /*
     draw Functions
   */
@@ -331,7 +481,7 @@ export class Chart2 {
         <div id="${targetElementNames.leftArea}" data-id="left-area">
           <div id="${targetElementNames.yAxisDisplayArea}" data-id="y-axis-display-area">
             <div id="${targetElementNames.yAxisTopBottomMarginBox}" class="${targetElementNames.topBottomMarginBottom}" data-id="y-axis-top-bottom-margin-box"></div>
-            <svg class="${targetElementNames.svg} overflow-visible" id="${targetElementNames.yAxisDisplayAreaSvg}">
+            <svg class="${targetElementNames.svg} ${targetElementNames.overflowVisible}" id="${targetElementNames.yAxisDisplayAreaSvg}">
 
             </svg>
           </div>
@@ -340,7 +490,7 @@ export class Chart2 {
           <div id="${targetElementNames.rightAreaContentArea}" data-id="right-area-content-area">
             <div id="${targetElementNames.rightAreaContentAreaTopBottomMarginBottom}" class="${targetElementNames.topBottomMarginBottom}" data-id="right-area-content-area-top-bottom-margin-box"></div>
             <div id="${targetElementNames.chartDisplayArea}" data-id="chart-display-area">
-              <svg class="${targetElementNames.svg} overflow-visible" id="${targetElementNames.chartDisplayAreaSvg}">
+              <svg class="${targetElementNames.svg} ${targetElementNames.overflowVisible}" id="${targetElementNames.chartDisplayAreaSvg}">
 
               </svg>
             </div>
@@ -348,6 +498,14 @@ export class Chart2 {
               <svg class="${targetElementNames.svg}" id="${targetElementNames.xAxisDisplayAreaSvg}">
 
               </svg>
+            </div>
+            <div id="${targetElementNames.clipBoxArea}" data-id="clip-box-area">
+              <div id="${targetElementNames.clipBoxAreaTopRow}" data-id="clip-box-area-top-row">
+
+              </div>
+              <div id="${targetElementNames.clipBoxAreaBottomRow}" data-id="clip-box-area-bottom-row">
+
+              </div>
             </div>
           </div>
         </div>
@@ -419,6 +577,43 @@ export class Chart2 {
           display: block;
           position: relative;
         }
+        #${targetElementNames.clipBoxArea} {
+          width: 100px;
+          display: block;
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          opacity: 0;
+          z-index: 1;
+          background-color: #fff;
+          border: 1px solid #ccc;
+          transition: 0.3s all;
+        }
+        #${targetElementNames.clipBoxArea}.${targetElementNames.show} {
+          opacity: 1;
+        }
+        #${targetElementNames.clipBoxAreaTopRow} {
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+          background-color: #dfdfdf;
+          font-size: 12px;
+          color: #222;
+          box-sizing: border-box;
+          padding: 6px;
+        }
+        #${targetElementNames.clipBoxAreaBottomRow} {
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          align-items: center;
+          position: relative;
+          padding: 6px;
+        }
         #${targetElementNames.bottomRowArea} {
           width: 100%;
           height: ${this.getDataLabelAreaHeight()}px;
@@ -432,7 +627,7 @@ export class Chart2 {
           display: block;
           position: relative;
         }
-        .${targetElementNames.svg}.overflow-visible {
+        .${targetElementNames.svg}.${targetElementNames.overflowVisible} {
           overflow: visible;
         }
         .${targetElementNames.topBottomMarginBottom} {
@@ -441,9 +636,44 @@ export class Chart2 {
           height: ${this.getTopBottomMarginHeight()}px;
           position: relative;
         }
+        .${targetElementNames.clipDataRow} {
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          margin-bottom: 4px;
+          position: relative;
+        }
+        .${targetElementNames.clipDataRow}:last-child {
+          margin-bottom: 0;
+        }
+        .${targetElementNames.clipDataRowTitleArea} {
+          width: 50px;
+          display: inline-flex;
+          flex-wrap: wrap;
+          align-items: center;
+          box-sizing: border-box;
+          padding: 4px;
+          position: relative;
+          font-size: 12px;
+          color: #333;
+        }
+        .${targetElementNames.clipDataRowContentArea} {
+          width: calc(100% - 50px);
+          display: inline-flex;
+          flex-wrap: wrap;
+          align-items: center;
+          box-sizing: border-box;
+          padding: 4px;
+          position: relative;
+          font-size: 12px;
+          color: #333;
+        }
       </style>
     `.trim();
     target.innerHTML = htmlString;
+
+    this.getChartDisplayAreaElement()?.addEventListener('mouseleave', (e) => this.callbackChartDisplayMouseEvent(e))
+    this.getChartDisplayAreaElement()?.addEventListener('mousemove', (e) => this.callbackChartDisplayMouseEvent(e), { capture: false });
   }
 
   private drawYAxis(): void {
@@ -559,6 +789,60 @@ export class Chart2 {
     ;
   }
 
+  private drawDataJoint(): void {
+    const t = this;
+
+    const targetElement = this.getChartDisplayAreaElement();
+    if (targetElement === null) {
+      return;
+    }
+
+    const svgElement = this.getChartDisplayAreaSvgElement();
+    if (svgElement === null) {
+      return;
+    }
+
+    select(svgElement)
+    .append('g')
+    .selectAll()
+    .data(this.xAxis?.labels ?? [])
+    .enter()
+    .append('line')
+    .attr('x1', (d, i) => (i * this.getDataOneColumnWidth()) + this.getChartLeftMarginWidth())
+    .attr('y1', 0)
+    .attr('x2', (d, i) => (i * this.getDataOneColumnWidth()) + this.getChartLeftMarginWidth())
+    .attr('y2', this.getChartDrawAreaHeight())
+    .attr('stroke', '#aaa')
+    .attr('stroke-width', 1)
+    .attr('stroke-dasharray', '2, 2')
+    .on('mouseover', (event, d) =>{
+      console.log('event', event);
+      console.log('d', d);
+    })
+    ;
+
+    select(targetElement)
+    .selectAll()
+    .data(this.xAxis?.labels ?? [])
+    .enter()
+    .append('div')
+    .attr('data-index', (d, i) => i)
+    .style('position', 'absolute')
+    .style('z-index', 2)
+    .style('width', `${this.getDataJointAreaWidth()}px`)
+    .style('height', '100%')
+    .style('top', 0)
+    .style('left', (d, i) => (i * this.getDataOneColumnWidth()) + (this.getChartLeftMarginWidth() - (this.getDataJointAreaWidth() / 2)) + 'px')
+    .style('cursor', 'pointer')
+    .on('mouseenter', (event, d) => t.callbackDataJoinMouseEvent(event, d))
+    .on('mouseleave', (event, d) => t.callbackDataJoinMouseEvent(event, d))
+    .on('mousemove', (event, d) => t.callbackDataJoinMouseEvent(event, d))
+    .on('touchstart', (event, d) => t.callbackDataJoinMouseEvent(event, d))
+    .on('touchend', (event, d) => t.callbackDataJoinMouseEvent(event, d))
+    .on('touchmove', (event, d) => t.callbackDataJoinMouseEvent(event, d))
+    ;
+  }
+
   draw(): void {
     const target = this.getTargetElement();
     while (target?.hasChildNodes() === true) {
@@ -572,5 +856,6 @@ export class Chart2 {
     this.drawPoint(); // data 의 point 를 그립니다.
     this.drawLine(); // data 의 line 을 그립니다.
     this.drawXAxis(); // x 축 라벨 영역을 그립니다.
+    this.drawDataJoint(); // 데이터가 꺾이는 영역을 그립니다.
   }
 }
