@@ -24,6 +24,9 @@ const FirstMakeChartPage = () => {
           { text: '2023-09' },
         ],
       })
+      .setYAxis({
+        unit: '다운로드 수',
+      })
       .setData([
         {
           name: 'angular',

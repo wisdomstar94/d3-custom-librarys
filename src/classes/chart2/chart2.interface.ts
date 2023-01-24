@@ -26,6 +26,7 @@ export declare namespace IChart2 {
   export interface YAxis {
     color?: string;
     fontSize?: string;
+    unit?: string;
   }
 
   export interface ConstructorParams {

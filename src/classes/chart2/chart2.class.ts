@@ -38,7 +38,7 @@ const targetElementNames = {
 };
 
 const defaultConfig = {
-  yLabelAreaWidth: 60,
+  yLabelAreaWidth: 32,
   xLabelAreaHeight: 40,
   topAreaHeight: 40,
   topBottomMarginHeight: 10,
@@ -48,8 +48,10 @@ const defaultConfig = {
   dataJointAreaWidth: 20,
   color: '#333',
   fontColor: '#333',
+  fontGrayColor: '#aaa',
   initTransitionDuration: 1000,
   clipFontSize: '12px',
+  fontSize: '12px',
 };
 defaultConfig.chartLeftMarginWidth = defaultConfig.dataOneColumnWidth / 2;
 
@@ -446,8 +448,7 @@ export class Chart2 {
     const getLeft = (): number => {
       const offsetLeft = this.getMouseOveredDataJointAreaOffsetLeft(event);
       console.log('offsetLeft', offsetLeft);
-      console.log(`(this.getChartDisplayAreaElement()?.clientWidth ?? 0)`, (this.getChartDisplayAreaElement()?.clientWidth ?? 0));
-      if (offsetLeft < (this.getChartDisplayAreaElement()?.clientWidth ?? 0) / 2) {
+      if (offsetLeft < (this.getRightAreaElement()?.clientWidth ?? 0) / 2) {
         return left + 20;
       } else {
         return left - ((this.getClipBoxAreaElement()?.clientWidth ?? 0));
@@ -455,6 +456,7 @@ export class Chart2 {
     };
 
     const xAxisLabelTargetElements = document.querySelectorAll(`.${targetElementNames.xAxisLabelItem}`);
+    const chartDisplayAreaSvgElement = this.getChartDisplayAreaSvgElement();
 
     if (clipBoxAreaElement !== null) {
       if (event.type === 'mouseenter') {
@@ -493,11 +495,31 @@ export class Chart2 {
         if (xAxisLabelTargetElements[index] !== null) {
           xAxisLabelTargetElements[index].classList.add(targetElementNames.active);
         }
+        if (chartDisplayAreaSvgElement !== null) {
+          select(chartDisplayAreaSvgElement)
+          .selectAll('g.point-bg')
+          .selectAll('circle')
+          .filter(`:nth-child(${index + 1})`)
+          .transition()
+          .duration(300)
+          .attr('opacity', 0.5)
+          ;
+        }
       } else if (event.type === 'mousemove') {
         clipBoxAreaElement.style.top = pointer.y + 'px'; 
       } else if (event.type === 'mouseleave') {
         if (xAxisLabelTargetElements[index] !== null) {
           xAxisLabelTargetElements[index].classList.remove(targetElementNames.active);
+        }
+        if (chartDisplayAreaSvgElement !== null) {
+          select(chartDisplayAreaSvgElement)
+          .selectAll('g.point-bg')
+          .selectAll('circle')
+          .filter(`:nth-child(${index + 1})`)
+          .transition()
+          .duration(300)
+          .attr('opacity', 0)
+          ;
         }
       }
     }
@@ -803,19 +825,30 @@ export class Chart2 {
 
     select(svgElement)
     .append('g')
+    .append('text')
+    .text(this.yAxis?.unit ?? '')
+    .attr("font-family", "sans-serif")
+    .attr("font-size", defaultConfig.fontSize)
+    .attr('x', 10)
+    .attr('y', -22)
+    .attr('fill', defaultConfig.fontGrayColor)
+    ;
+
+    select(svgElement)
+    .append('g')
     .selectAll()
     .data(yrl.yRange)
     .enter()
     .append('text')
     .text(d => d.toString())
     .attr("x", (d, i) => {
-      return 20;
+      return 10;
     })
     .attr("y", (d, i) => {
       return yrl.yLinear(d) + 3;
     })
     .attr("font-family", "sans-serif")
-    .attr("font-size", "10px")
+    .attr("font-size", defaultConfig.fontSize)
     ; 
   }
 
@@ -828,6 +861,25 @@ export class Chart2 {
     this.data?.forEach((item, index) => {
       select(svgElement)
       .append('g')
+      .attr('class', 'point-bg')
+      .selectAll()
+      .data(item.datas)
+      .enter()
+      .append('circle')
+      .attr('r', 8)
+      .attr('cx', (d, i) => {
+        return (i * this.getDataOneColumnWidth()) + this.getChartLeftMarginWidth();
+      })
+      .attr('cy', (d, i) => {
+        return this.getPointDrawMaterials().yRangeAndLinear(d);
+      })
+      .attr('fill', item.color ?? defaultConfig.color)
+      .attr('opacity', 0)
+      ;
+
+      select(svgElement)
+      .append('g')
+      .attr('class', 'point')
       .selectAll()
       .data(item.datas)
       .enter()
