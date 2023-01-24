@@ -29,6 +29,7 @@ export declare namespace IChart2 {
     dataOneColumnWidth?: number;
     topBottomMarginHeight?: number;
     chartLeftMarginWidth?: number;
+    initTransitionDuration?: number;
     data?: Data[];
     xAxis?: XAxis;
     yAxis?: YAxis;

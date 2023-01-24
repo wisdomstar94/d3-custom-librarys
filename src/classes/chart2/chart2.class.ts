@@ -1,4 +1,4 @@
-import { extent, line, merge, range, scaleLinear, select, union } from "d3";
+import { easeBackOut, extent, line, merge, range, scaleLinear, select, transition, union } from "d3";
 import { IChart2 } from "./chart2.interface";
 import { v4 } from 'uuid';
 
@@ -31,6 +31,7 @@ const defaultConfig = {
   chartLeftMarginWidth: 30,
   dataOneColumnWidth: 60,
   color: '#333',
+  initTransitionDuration: 1000,
 };
 defaultConfig.chartLeftMarginWidth = defaultConfig.dataOneColumnWidth / 2;
 
@@ -43,6 +44,7 @@ export class Chart2 {
   dataOneColumnWidth?: number;
   topBottomMarginHeight?: number;
   chartLeftMarginWidth?: number;
+  initTransitionDuration?: number;
   data?: IChart2.Data[];
   xAxis?: IChart2.XAxis;
   yAxis?: IChart2.YAxis;
@@ -56,6 +58,7 @@ export class Chart2 {
     this.dataOneColumnWidth = params?.dataOneColumnWidth;
     this.topBottomMarginHeight = params?.topBottomMarginHeight;
     this.chartLeftMarginWidth = params?.chartLeftMarginWidth;
+    this.initTransitionDuration = params?.initTransitionDuration;
     this.data = params?.data;
     this.xAxis = params?.xAxis;
     this.yAxis = params?.yAxis;
@@ -111,6 +114,11 @@ export class Chart2 {
 
   setYAxis(v: IChart2.YAxis): Chart2 {
     this.yAxis = v;
+    return this;
+  }
+
+  setInitTransitionDuration(v: number): Chart2 {
+    this.initTransitionDuration = v;
     return this;
   }
 
@@ -245,6 +253,14 @@ export class Chart2 {
       allNumberDatas,
       yRangeAndLinear: this.getYRangeAndLinear().yLinear,
     };
+  }
+
+  private getInitTransitionDuration() {
+    if (this.initTransitionDuration === undefined) {
+      console.warn(`initTransitionDuration 값이 설정되어 있지 않아 default 값인 ${defaultConfig.initTransitionDuration} 으로 적용됩니다.`);
+      return defaultConfig.initTransitionDuration;
+    }
+    return this.initTransitionDuration;
   }
 
   /*
@@ -470,7 +486,7 @@ export class Chart2 {
       .data(item.datas)
       .enter()
       .append('circle')
-      .attr('r', 3)
+      .attr('r', 0)
       .attr('cx', (d, i) => {
         return (i * this.getDataOneColumnWidth()) + this.getChartLeftMarginWidth();
       })
@@ -478,6 +494,13 @@ export class Chart2 {
         return this.getPointDrawMaterials().yRangeAndLinear(d);
       })
       .attr('fill', item.color ?? defaultConfig.color)
+      .transition()
+      .delay((d, i) => {
+        return i * (this.getInitTransitionDuration() / (item.datas.length + 5));
+      })
+      .ease(easeBackOut)
+      .duration(300)
+      .attr('r', 5)
       ;
     });
   }
@@ -502,6 +525,11 @@ export class Chart2 {
       .attr('stroke-width', 1)
       .attr("fill", 'none')
       .attr("stroke", item.color ?? defaultConfig.color)
+      .style("clip-path", "polygon(0 0, 0% 0, 0% 100%, 0% 100%)")
+      .transition()
+      .duration(this.getInitTransitionDuration())
+      .ease(easeBackOut)
+      .style("clip-path", "polygon(0 0, 100% 0, 100% 100%, 0% 100%)")
       ;
     });
   }
