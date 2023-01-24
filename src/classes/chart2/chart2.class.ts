@@ -1,4 +1,4 @@
-import { extent, merge, range, scaleLinear, select } from "d3";
+import { extent, merge, range, scaleLinear, select, union } from "d3";
 import { IChart2 } from "./chart2.interface";
 import { v4 } from 'uuid';
 
@@ -7,9 +7,11 @@ const targetElementNames = {
   topRowArea: 'id_' + v4(),
   leftArea: 'id_' + v4(),
   yAxisDisplayArea: 'id_' + v4(),
+  yAxisTopBottomMarginBox: 'id_' + v4(),
   yAxisDisplayAreaSvg: 'id_' + v4(),
   rightArea: 'id_' + v4(),
   rightAreaContentArea: 'id_' + v4(),
+  rightAreaContentAreaTopBottomMarginBottom: 'id_' + v4(),
   chartDisplayArea: 'id_' + v4(),
   chartDisplayAreaSvg: 'id_' + v4(),
   xAxisDisplayArea: 'id_' + v4(),
@@ -17,12 +19,14 @@ const targetElementNames = {
   bottomRowArea: 'id_' + v4(),
 
   svg: 'class_' + v4(),
+  topBottomMarginBottom: 'class_' + v4(),
 };
 
 const defaultConfig = {
   yLabelAreaWidth: 60,
   xLabelAreaHeight: 90,
   topAreaHeight: 40,
+  topBottomMarginHeight: 10,
   dataLabelAreaHeight: 80,
   dataOneColumnWidth: 80,
 };
@@ -34,6 +38,7 @@ export class Chart2 {
   yLabelAreaWidth?: number;
   xLabelAreaHeight?: number;
   dataOneColumnWidth?: number;
+  topBottomMarginHeight?: number;
   data?: IChart2.Data[];
   xAxis?: IChart2.XAxis;
   yAxis?: IChart2.YAxis;
@@ -45,6 +50,7 @@ export class Chart2 {
     this.yLabelAreaWidth = params?.yLabelAreaWidth;
     this.xLabelAreaHeight = params?.xLabelAreaHeight;
     this.dataOneColumnWidth = params?.dataOneColumnWidth;
+    this.topBottomMarginHeight = params?.topBottomMarginHeight;
     this.data = params?.data;
     this.xAxis = params?.xAxis;
     this.yAxis = params?.yAxis;
@@ -83,6 +89,11 @@ export class Chart2 {
     return this;
   }
 
+  setTopBottomMarginHeight(v: number): Chart2 {
+    this.topBottomMarginHeight = v;
+    return this;
+  }
+
   setData(v: IChart2.Data[]): Chart2 {
     this.data = v;
     return this;
@@ -101,7 +112,7 @@ export class Chart2 {
   /*
     Getter Functions
   */
-  getTargetElement(): HTMLElement | null {
+  private getTargetElement(): HTMLElement | null {
     if (typeof this.targetElementId !== 'string') {
       console.error(`targetElementId 가 undefined 입니다.`);
       return null;
@@ -115,7 +126,7 @@ export class Chart2 {
     return document.querySelector<HTMLElement>(selector);
   }
 
-  getTargetWidth(): number {
+  private getTargetWidth(): number {
     const target = this.getTargetElement();
     if (target === null) {
       return 0;
@@ -123,7 +134,7 @@ export class Chart2 {
     return target.clientWidth;
   }
 
-  getTargetHeight(): number {
+  private getTargetHeight(): number {
     const target = this.getTargetElement();
     if (target === null) {
       return 0;
@@ -131,7 +142,7 @@ export class Chart2 {
     return target.clientHeight;
   }
 
-  getTopAreaHeight(): number {
+  private getTopAreaHeight(): number {
     if (this.topAreaHeight === undefined) {
       console.warn(`topAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.topAreaHeight} 으로 적용됩니다.`);
       return defaultConfig.topAreaHeight;
@@ -139,7 +150,7 @@ export class Chart2 {
     return this.topAreaHeight;
   }
 
-  getDataLabelAreaHeight(): number {
+  private getDataLabelAreaHeight(): number {
     if (this.dataLabelAreaHeight === undefined) {
       console.warn(`dataLabelAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataLabelAreaHeight} 으로 적용됩니다.`);
       return defaultConfig.dataLabelAreaHeight;
@@ -147,7 +158,7 @@ export class Chart2 {
     return this.dataLabelAreaHeight;
   }
 
-  getYLabelAreaWidth(): number {
+  private getYLabelAreaWidth(): number {
     if (this.yLabelAreaWidth === undefined) {
       console.warn(`yLabelAreaWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.yLabelAreaWidth} 으로 적용됩니다.`);
       return defaultConfig.yLabelAreaWidth;
@@ -155,7 +166,7 @@ export class Chart2 {
     return this.yLabelAreaWidth;
   }
 
-  getXLabelAreaHeight(): number {
+  private getXLabelAreaHeight(): number {
     if (this.xLabelAreaHeight === undefined) {
       console.warn(`xLabelAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.xLabelAreaHeight} 으로 적용됩니다.`);
       return defaultConfig.xLabelAreaHeight;
@@ -163,7 +174,7 @@ export class Chart2 {
     return this.xLabelAreaHeight;
   }
 
-  getDataOneColumnWidth(): number {
+  private getDataOneColumnWidth(): number {
     if (this.dataOneColumnWidth === undefined) {
       console.warn(`dataOneColumnWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataOneColumnWidth} 으로 적용됩니다.`);
       return defaultConfig.dataOneColumnWidth;
@@ -171,12 +182,20 @@ export class Chart2 {
     return this.dataOneColumnWidth;
   }
 
-  getChartDrawAreaHeight(): number {
+  private getChartDrawAreaHeight(): number {
     const element = this.getChartDisplayAreaElement();
     return element === null ? 0 : element.clientHeight;
   }
 
-  getYRangeAndLinear() {
+  private getTopBottomMarginHeight(): number {
+    if (this.topBottomMarginHeight === undefined) {
+      console.warn(`topBottomMarginHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.topBottomMarginHeight} 으로 적용됩니다.`);
+      return defaultConfig.topBottomMarginHeight;
+    }
+    return this.topBottomMarginHeight;
+  }
+
+  private getYRangeAndLinear() {
     const allNumberDatas = merge<number>(this.data?.map(x => x.datas) ?? []);
     let [minNumber, maxNumber] = extent(allNumberDatas);
     if (minNumber === undefined) { minNumber = 0; }
@@ -192,61 +211,71 @@ export class Chart2 {
     };
   }
 
+  private getPointDrawMaterials() {
+    const allNumberDatas = Array.from(union(merge<number>(this.data?.map(x => x.datas) ?? [])));
+    // const pointYConverter = scaleLinear().domain([0, max(allNumberDatas) ?? 0]).range([getContainerHeight() - 60, 20]);
+
+    return {
+      allNumberDatas,
+      yRangeAndLinear: this.getYRangeAndLinear().yLinear,
+    };
+  }
+
   /*
     Getter Element Function
   */
-  getChartContainerElement(): HTMLDivElement | null {
+  private getChartContainerElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.chartContainer}`);
   }
 
-  getTopRowAreaElement(): HTMLDivElement | null {
+  private getTopRowAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.topRowArea}`);
   }
 
-  getLeftAreaElement(): HTMLDivElement | null {
+  private getLeftAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.leftArea}`);
   }
 
-  getYAxisDisplayAreaElement(): HTMLDivElement | null {
+  private getYAxisDisplayAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.yAxisDisplayArea}`);
   }
 
-  getYAxisDisplayAreaSvgElement(): SVGElement | null {
+  private getYAxisDisplayAreaSvgElement(): SVGElement | null {
     return document.querySelector<SVGElement>(`#${targetElementNames.yAxisDisplayAreaSvg}`);
   }
 
-  getRightAreaElement(): HTMLDivElement | null {
+  private getRightAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.rightArea}`);
   }
 
-  getRightAreaContentAreaElement(): HTMLDivElement | null {
+  private getRightAreaContentAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.rightAreaContentArea}`);
   }
 
-  getChartDisplayAreaElement(): HTMLDivElement | null {
+  private getChartDisplayAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.chartDisplayArea}`);
   }
 
-  getChartDisplayAreaSvgElement(): SVGElement | null {
+  private getChartDisplayAreaSvgElement(): SVGElement | null {
     return document.querySelector<SVGElement>(`#${targetElementNames.chartDisplayAreaSvg}`);
   }
 
-  getXAxisDisplayAreaElement(): HTMLDivElement | null {
+  private getXAxisDisplayAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.xAxisDisplayArea}`);
   }
 
-  getXAxisDisplayAreaSvgElement(): SVGElement | null {
+  private getXAxisDisplayAreaSvgElement(): SVGElement | null {
     return document.querySelector<SVGElement>(`#${targetElementNames.xAxisDisplayAreaSvg}`);
   }
 
-  getBottomRowAreaElement(): HTMLDivElement | null {
+  private getBottomRowAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.bottomRowArea}`);
   }
 
   /*
-    Other Functions
+    draw Functions
   */
-  drawBasicContainer(): void {
+  private drawBasicContainer(): void {
     const target = this.getTargetElement();
     if (target === null) {
       return;
@@ -259,6 +288,7 @@ export class Chart2 {
         </div>
         <div id="${targetElementNames.leftArea}" data-id="left-area">
           <div id="${targetElementNames.yAxisDisplayArea}" data-id="y-axis-display-area">
+            <div id="${targetElementNames.yAxisTopBottomMarginBox}" class="${targetElementNames.topBottomMarginBottom}" data-id="y-axis-top-bottom-margin-box"></div>
             <svg class="${targetElementNames.svg} overflow-visible" id="${targetElementNames.yAxisDisplayAreaSvg}">
 
             </svg>
@@ -266,8 +296,9 @@ export class Chart2 {
         </div>
         <div id="${targetElementNames.rightArea}" data-id="right-area">
           <div id="${targetElementNames.rightAreaContentArea}" data-id="right-area-content-area">
+            <div id="${targetElementNames.rightAreaContentAreaTopBottomMarginBottom}" class="${targetElementNames.topBottomMarginBottom}" data-id="right-area-content-area-top-bottom-margin-box"></div>
             <div id="${targetElementNames.chartDisplayArea}" data-id="chart-display-area">
-              <svg class="${targetElementNames.svg}" id="${targetElementNames.chartDisplayAreaSvg}">
+              <svg class="${targetElementNames.svg} overflow-visible" id="${targetElementNames.chartDisplayAreaSvg}">
 
               </svg>
             </div>
@@ -304,7 +335,7 @@ export class Chart2 {
         }
         #${targetElementNames.yAxisDisplayArea} {
           width: 100%;
-          height: calc(100% - ${this.getXLabelAreaHeight()}px);
+          height: calc(100% - ${this.getXLabelAreaHeight() + this.getTopBottomMarginHeight()}px);
           display: block;
           position: relative;
         }
@@ -314,6 +345,7 @@ export class Chart2 {
           display: block;
           position: relative;
           overflow-x: scroll;
+          overflow-y: visible;
         }
         #${targetElementNames.rightArea}::-webkit-scrollbar {
           width: 0;
@@ -334,7 +366,7 @@ export class Chart2 {
         }
         #${targetElementNames.chartDisplayArea} {
           width: 100%;
-          height: calc(100% - ${this.getXLabelAreaHeight()}px);
+          height: calc(100% - ${this.getXLabelAreaHeight() + this.getTopBottomMarginHeight()}px);
           display: block;
           position: relative;
         }
@@ -360,12 +392,18 @@ export class Chart2 {
         .${targetElementNames.svg}.overflow-visible {
           overflow: visible;
         }
+        .${targetElementNames.topBottomMarginBottom} {
+          width: 100%;
+          display: block;
+          height: ${this.getTopBottomMarginHeight()}px;
+          position: relative;
+        }
       </style>
     `.trim();
     target.innerHTML = htmlString;
   }
 
-  drawYAxis(): void {
+  private drawYAxis(): void {
     const svgElement = this.getYAxisDisplayAreaSvgElement();
     if (svgElement === null) {
       return;
@@ -389,8 +427,32 @@ export class Chart2 {
     })
     .attr("font-family", "sans-serif")
     .attr("font-size", "10px")
-    ;
-    
+    ; 
+  }
+
+  private drawPoint(): void {
+    const svgElement = this.getChartDisplayAreaSvgElement();
+    if (svgElement === null) {
+      return;
+    }
+
+    this.data?.forEach((item, index) => {
+      select(svgElement)
+      .append('g')
+      .selectAll()
+      .data(item.datas)
+      .enter()
+      .append('circle')
+      .attr('r', 3)
+      .attr('cx', (d, i) => {
+        return (i * 60) + 78;
+      })
+      .attr('cy', (d, i) => {
+        return this.getPointDrawMaterials().yRangeAndLinear(d);
+      })
+      .attr('fill', item.color ?? '#333')
+      ;
+    });
   }
 
   draw(): void {
@@ -403,5 +465,6 @@ export class Chart2 {
 
     this.drawBasicContainer(); // 기본 골격을 그립니다.
     this.drawYAxis(); // y 축을 그립니다.
+    this.drawPoint(); // data 의 point 를 그립니다.
   }
 }
