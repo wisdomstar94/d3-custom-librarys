@@ -2,6 +2,7 @@
   "name": "d3-custom-librarys",
   "version": "0.1.0",
   "private": true,
+  "description": "d3 라이브러리를 활용하여 직접 차트를 만들어 보는 연습을 하는 레포지토리 입니다.",
   "scripts": {
     "local": "env-cmd -f .env.localhost next dev -p 3040",
     "build:dev": "env-cmd -f .env.development next build",
@@ -10,6 +11,37 @@
     "start": "next start -p 3040",
     "lint": "next lint"
   },
+  "author": {
+    "name": "Shin Jae Hyeon",
+    "email": "wisdomstar94@gmail.com"
+  },
+  "keywords": [
+    "d3",
+    "d3 library",
+    "d3 라이브러리",
+    "d3.js",
+    "d3 js",
+    "그래프",
+    "차트",
+    "graph",
+    "chart",
+    "시각화",
+    "시각화 라이브러리",
+    "d3 javascript",
+    "javascript d3",
+    "javascript d3.js",
+    "자바스크립트 d3",
+    "d3 자바스크립트",
+    "자바스크립트 d3.js",
+    "d3 chart",
+    "d3 graph",
+    "d3.js chart",
+    "d3.js graph",
+    "javascript d3 chart",
+    "javascript d3 graph",
+    "javascript d3.js chart",
+    "javascript d3.js graph"
+  ],
   "dependencies": {
     "@next/font": "13.1.2",
     "@types/node": "18.11.18",
