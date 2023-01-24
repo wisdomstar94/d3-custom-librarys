@@ -42,6 +42,7 @@ const defaultConfig = {
   color: '#333',
   fontColor: '#333',
   initTransitionDuration: 1000,
+  clipFontSize: '12px',
 };
 defaultConfig.chartLeftMarginWidth = defaultConfig.dataOneColumnWidth / 2;
 
@@ -56,9 +57,11 @@ export class Chart2 {
   topBottomMarginHeight?: number;
   chartLeftMarginWidth?: number;
   initTransitionDuration?: number;
+  clipFontSize?: string;
   data?: IChart2.Data[];
   xAxis?: IChart2.XAxis;
   yAxis?: IChart2.YAxis;
+  callbackClip?: IChart2.CallbackClip;
 
   // currentChartDisplayPointer?: { x: number; y: number; };
 
@@ -73,9 +76,11 @@ export class Chart2 {
     this.topBottomMarginHeight = params?.topBottomMarginHeight;
     this.chartLeftMarginWidth = params?.chartLeftMarginWidth;
     this.initTransitionDuration = params?.initTransitionDuration;
+    this.clipFontSize = params?.clipFontSize;
     this.data = params?.data;
     this.xAxis = params?.xAxis;
     this.yAxis = params?.yAxis;
+    this.callbackClip = params?.callbackClip;
   }
 
   /*
@@ -121,6 +126,11 @@ export class Chart2 {
     return this;
   }
 
+  setClipFontSize(v: string): Chart2 {
+    this.clipFontSize = v;
+    return this;
+  }
+
   setData(v: IChart2.Data[]): Chart2 {
     this.data = v;
     return this;
@@ -138,6 +148,11 @@ export class Chart2 {
 
   setInitTransitionDuration(v: number): Chart2 {
     this.initTransitionDuration = v;
+    return this;
+  }
+
+  setCallbackClip(fn: IChart2.CallbackClip): Chart2 {
+    this.callbackClip = fn;
     return this;
   }
 
@@ -183,7 +198,7 @@ export class Chart2 {
 
   private getTopAreaHeight(): number {
     if (this.topAreaHeight === undefined) {
-      console.warn(`topAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.topAreaHeight} 으로 적용됩니다.`);
+      // console.warn(`topAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.topAreaHeight} 으로 적용됩니다.`);
       return defaultConfig.topAreaHeight;
     }
     return this.topAreaHeight;
@@ -191,7 +206,7 @@ export class Chart2 {
 
   private getDataLabelAreaHeight(): number {
     if (this.dataLabelAreaHeight === undefined) {
-      console.warn(`dataLabelAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataLabelAreaHeight} 으로 적용됩니다.`);
+      // console.warn(`dataLabelAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataLabelAreaHeight} 으로 적용됩니다.`);
       return defaultConfig.dataLabelAreaHeight;
     }
     return this.dataLabelAreaHeight;
@@ -199,7 +214,7 @@ export class Chart2 {
 
   private getYLabelAreaWidth(): number {
     if (this.yLabelAreaWidth === undefined) {
-      console.warn(`yLabelAreaWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.yLabelAreaWidth} 으로 적용됩니다.`);
+      // console.warn(`yLabelAreaWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.yLabelAreaWidth} 으로 적용됩니다.`);
       return defaultConfig.yLabelAreaWidth;
     }
     return this.yLabelAreaWidth;
@@ -207,7 +222,7 @@ export class Chart2 {
 
   private getXLabelAreaHeight(): number {
     if (this.xLabelAreaHeight === undefined) {
-      console.warn(`xLabelAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.xLabelAreaHeight} 으로 적용됩니다.`);
+      // console.warn(`xLabelAreaHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.xLabelAreaHeight} 으로 적용됩니다.`);
       return defaultConfig.xLabelAreaHeight;
     }
     return this.xLabelAreaHeight;
@@ -215,7 +230,7 @@ export class Chart2 {
 
   private getDataOneColumnWidth(): number {
     if (this.dataOneColumnWidth === undefined) {
-      console.warn(`dataOneColumnWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataOneColumnWidth} 으로 적용됩니다.`);
+      // console.warn(`dataOneColumnWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataOneColumnWidth} 으로 적용됩니다.`);
       return defaultConfig.dataOneColumnWidth;
     }
     return this.dataOneColumnWidth;
@@ -228,7 +243,7 @@ export class Chart2 {
 
   private getDataJointAreaWidth(): number {
     if (this.dataJointAreaWidth === undefined) {
-      console.warn(`dataJointAreaWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataJointAreaWidth} 으로 적용됩니다.`);
+      // console.warn(`dataJointAreaWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.dataJointAreaWidth} 으로 적용됩니다.`);
       return defaultConfig.dataJointAreaWidth;
     }
     return this.dataJointAreaWidth;
@@ -236,7 +251,7 @@ export class Chart2 {
 
   private getTopBottomMarginHeight(): number {
     if (this.topBottomMarginHeight === undefined) {
-      console.warn(`topBottomMarginHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.topBottomMarginHeight} 으로 적용됩니다.`);
+      // console.warn(`topBottomMarginHeight 값이 설정되어 있지 않아 default 값인 ${defaultConfig.topBottomMarginHeight} 으로 적용됩니다.`);
       return defaultConfig.topBottomMarginHeight;
     }
     return this.topBottomMarginHeight;
@@ -244,10 +259,18 @@ export class Chart2 {
 
   private getChartLeftMarginWidth(): number {
     if (this.chartLeftMarginWidth === undefined) {
-      console.warn(`chartLeftMarginWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.chartLeftMarginWidth} 으로 적용됩니다.`);
+      // console.warn(`chartLeftMarginWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.chartLeftMarginWidth} 으로 적용됩니다.`);
       return defaultConfig.chartLeftMarginWidth;
     }
     return this.chartLeftMarginWidth;
+  }
+
+  private getClipFontSize(): string {
+    if (this.clipFontSize === undefined) {
+      // console.warn(`clipFontSize 값이 설정되어 있지 않아 default 값인 ${defaultConfig.clipFontSize} 으로 적용됩니다.`);
+      return defaultConfig.clipFontSize;
+    }
+    return this.clipFontSize;
   }
 
   private getRightAreaContentAreaWidth(): string {
@@ -291,7 +314,7 @@ export class Chart2 {
 
   private getInitTransitionDuration() {
     if (this.initTransitionDuration === undefined) {
-      console.warn(`initTransitionDuration 값이 설정되어 있지 않아 default 값인 ${defaultConfig.initTransitionDuration} 으로 적용됩니다.`);
+      // console.warn(`initTransitionDuration 값이 설정되어 있지 않아 default 값인 ${defaultConfig.initTransitionDuration} 으로 적용됩니다.`);
       return defaultConfig.initTransitionDuration;
     }
     return this.initTransitionDuration;
@@ -400,7 +423,7 @@ export class Chart2 {
     const clipBoxAreaElement = this.getClipBoxAreaElement();
     const pointer = this.getOffsetPointer(event);
 
-    const indexDatas = this.data?.map((x) => {
+    const clipDatas: IChart2.ClipData[] | undefined = this.data?.map((x) => {
       return {
         name: x.name,
         color: x.color,
@@ -435,18 +458,22 @@ export class Chart2 {
         const clipBoxAreaBottomRowElement = this.getClipBoxAreaBottomRowElement();
         if (clipBoxAreaBottomRowElement !== null) {
           let htmlString = ``;
-          indexDatas?.forEach((item, i) => {
-            htmlString += `
-              <div class="${targetElementNames.clipDataRow}">
-                <div class="${targetElementNames.clipDataRowTitleArea}" style="color: ${item.color ?? defaultConfig.fontColor};">
-                  ${item.name}
+          if (this.callbackClip !== undefined) {
+            htmlString = this.callbackClip(clipDatas ?? [], index);
+          } else {
+            clipDatas?.forEach((item, i) => {
+              htmlString += `
+                <div class="${targetElementNames.clipDataRow}">
+                  <div class="${targetElementNames.clipDataRowTitleArea}" style="color: ${item.color ?? defaultConfig.fontColor};">
+                    ${item.name}
+                  </div>
+                  <div class="${targetElementNames.clipDataRowContentArea}" style="color: ${item.color ?? defaultConfig.fontColor};">
+                    ${item.data}
+                  </div>
                 </div>
-                <div class="${targetElementNames.clipDataRowContentArea}" style="color: ${item.color ?? defaultConfig.fontColor};">
-                  ${item.data}
-                </div>
-              </div>
-            `.trim();
-          });
+              `.trim();
+            });
+          }
           clipBoxAreaBottomRowElement.innerHTML = htmlString;
         }
       } else if (event.type === 'mousemove') {
@@ -600,7 +627,7 @@ export class Chart2 {
           align-items: center;
           position: relative;
           background-color: #dfdfdf;
-          font-size: 12px;
+          font-size: ${this.getClipFontSize()};
           color: #222;
           box-sizing: border-box;
           padding: 6px;
@@ -654,7 +681,7 @@ export class Chart2 {
           box-sizing: border-box;
           padding: 4px;
           position: relative;
-          font-size: 12px;
+          font-size: ${this.getClipFontSize()};
           color: #333;
         }
         .${targetElementNames.clipDataRowContentArea} {
@@ -665,7 +692,7 @@ export class Chart2 {
           box-sizing: border-box;
           padding: 4px;
           position: relative;
-          font-size: 12px;
+          font-size: ${this.getClipFontSize()};
           color: #333;
         }
       </style>
@@ -683,7 +710,7 @@ export class Chart2 {
     }
 
     const yrl = this.getYRangeAndLinear();
-    console.log('yrl', yrl);
+    // console.log('yrl', yrl);
 
     select(svgElement)
     .append('g')
@@ -746,7 +773,7 @@ export class Chart2 {
       const points: [number, number][] = item.datas.map((x, i) => {
         return [(i * this.getDataOneColumnWidth()) + this.getChartLeftMarginWidth(), this.getPointDrawMaterials().yRangeAndLinear(x)];
       });
-      console.log('@@points', points);
+      // console.log('@@points', points);
       const pathOfLine = lineGenerator(points);
       select(svgElement)
       .append('g')

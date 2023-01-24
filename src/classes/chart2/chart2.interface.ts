@@ -1,4 +1,12 @@
 export declare namespace IChart2 {
+  export type CallbackClip = (clipData: ClipData[], index: number) => string;
+
+  export interface ClipData {
+    name: string;
+    color?: string;
+    data?: number;
+  }
+
   export interface Data {
     name: string;
     color?: string;
@@ -31,8 +39,10 @@ export declare namespace IChart2 {
     topBottomMarginHeight?: number;
     chartLeftMarginWidth?: number;
     initTransitionDuration?: number;
+    clipFontSize?: string;
     data?: Data[];
     xAxis?: XAxis;
     yAxis?: YAxis;
+    callbackClip?: CallbackClip;
   }
 }
