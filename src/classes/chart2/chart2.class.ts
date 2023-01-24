@@ -171,6 +171,11 @@ export class Chart2 {
     return this.dataOneColumnWidth;
   }
 
+  getChartDrawAreaHeight(): number {
+    const element = this.getChartDisplayAreaElement();
+    return element === null ? 0 : element.clientHeight;
+  }
+
   getYRangeAndLinear() {
     const allNumberDatas = merge<number>(this.data?.map(x => x.datas) ?? []);
     let [minNumber, maxNumber] = extent(allNumberDatas);
@@ -179,7 +184,7 @@ export class Chart2 {
     const size = maxNumber - minNumber;
 
     const yRange = range(minNumber, maxNumber, Math.ceil(size / 4)).concat(maxNumber);
-    const yLinear = scaleLinear().domain([minNumber, maxNumber]).range([this.getTargetHeight() - this.getXLabelAreaHeight(), this.getTopAreaHeight()]);
+    const yLinear = scaleLinear().domain([minNumber, maxNumber]).range([this.getChartDrawAreaHeight(), 0]);
 
     return {
       yRange,
@@ -254,7 +259,7 @@ export class Chart2 {
         </div>
         <div id="${targetElementNames.leftArea}" data-id="left-area">
           <div id="${targetElementNames.yAxisDisplayArea}" data-id="y-axis-display-area">
-            <svg class="${targetElementNames.svg}">
+            <svg class="${targetElementNames.svg} overflow-visible" id="${targetElementNames.yAxisDisplayAreaSvg}">
 
             </svg>
           </div>
@@ -262,12 +267,12 @@ export class Chart2 {
         <div id="${targetElementNames.rightArea}" data-id="right-area">
           <div id="${targetElementNames.rightAreaContentArea}" data-id="right-area-content-area">
             <div id="${targetElementNames.chartDisplayArea}" data-id="chart-display-area">
-              <svg class="${targetElementNames.svg}">
+              <svg class="${targetElementNames.svg}" id="${targetElementNames.chartDisplayAreaSvg}">
 
               </svg>
             </div>
             <div id="${targetElementNames.xAxisDisplayArea}" data-id="x-axis-display-area">
-              <svg class="${targetElementNames.svg}">
+              <svg class="${targetElementNames.svg}" id="${targetElementNames.xAxisDisplayAreaSvg}">
 
               </svg>
             </div>
@@ -349,11 +354,43 @@ export class Chart2 {
         .${targetElementNames.svg} {
           width: 100%;
           height: 100%;
+          display: block;
           position: relative;
+        }
+        .${targetElementNames.svg}.overflow-visible {
+          overflow: visible;
         }
       </style>
     `.trim();
     target.innerHTML = htmlString;
+  }
+
+  drawYAxis(): void {
+    const svgElement = this.getYAxisDisplayAreaSvgElement();
+    if (svgElement === null) {
+      return;
+    }
+
+    const yrl = this.getYRangeAndLinear();
+    console.log('yrl', yrl);
+
+    select(svgElement)
+    .append('g')
+    .selectAll()
+    .data(yrl.yRange)
+    .enter()
+    .append('text')
+    .text(d => d.toString())
+    .attr("x", (d, i) => {
+      return 20;
+    })
+    .attr("y", (d, i) => {
+      return yrl.yLinear(d) + 3;
+    })
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "10px")
+    ;
+    
   }
 
   draw(): void {
@@ -364,6 +401,7 @@ export class Chart2 {
       }
     }
 
-    this.drawBasicContainer();
+    this.drawBasicContainer(); // 기본 골격을 그립니다.
+    this.drawYAxis(); // y 축을 그립니다.
   }
 }

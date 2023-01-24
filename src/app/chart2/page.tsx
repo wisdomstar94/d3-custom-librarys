@@ -18,6 +18,12 @@ const FirstMakeChartPage = () => {
           { text: '2023-03' },
         ],
       })
+      .setData([
+        {
+          name: 'angular',
+          datas: [10, 70, 30, 100, 50, 20],
+        },
+      ])
     ;
     myChart2.draw();
   }, []);

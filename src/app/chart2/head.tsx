@@ -1,8 +1,8 @@
 export default function Head() {
   return (
     <>
-      <title>first-make-chart</title>
-      <meta name="description" content="This is first-make-chart" />
+      <title>chart2</title>
+      <meta name="description" content="This is chart2" />
     </>
   )
 }
