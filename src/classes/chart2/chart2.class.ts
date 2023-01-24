@@ -32,6 +32,7 @@ const defaultConfig = {
   dataOneColumnWidth: 60,
   color: '#333',
 };
+defaultConfig.chartLeftMarginWidth = defaultConfig.dataOneColumnWidth / 2;
 
 export class Chart2 {
   targetElementId?: string;
@@ -505,6 +506,31 @@ export class Chart2 {
     });
   }
 
+  private drawXAxis() {
+    const svgElement = this.getXAxisDisplayAreaSvgElement();
+    if (svgElement === null) {
+      return;
+    }
+
+    select(svgElement)
+    .append('g')
+    .selectAll()
+    .data(this.xAxis?.labels ?? [])
+    .enter()
+    .append('text')
+    .text(d => d.text)
+    .attr("x", (d, i) => {
+      return (i * this.getDataOneColumnWidth()) + this.getChartLeftMarginWidth();
+    })
+    .attr("y", (d, i) => {
+      return 28;
+    })
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "10px")
+    .attr("text-anchor", "middle")
+    ;
+  }
+
   draw(): void {
     const target = this.getTargetElement();
     while (target?.hasChildNodes() === true) {
@@ -514,8 +540,9 @@ export class Chart2 {
     }
 
     this.drawBasicContainer(); // 기본 골격을 그립니다.
-    this.drawYAxis(); // y 축을 그립니다.
+    this.drawYAxis(); // y 축을 데이터 수치 영역을 그립니다.
     this.drawPoint(); // data 의 point 를 그립니다.
     this.drawLine(); // data 의 line 을 그립니다.
+    this.drawXAxis(); // x 축 라벨 영역을 그립니다.
   }
 }
