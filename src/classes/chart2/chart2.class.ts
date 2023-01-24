@@ -17,6 +17,7 @@ const targetElementNames = {
   xAxisDisplayArea: 'id_' + v4(),
   xAxisDisplayAreaSvg: 'id_' + v4(),
   bottomRowArea: 'id_' + v4(),
+  bottomRowAreaDataLabelNamesArea: 'id_' + v4(),
   clipBoxArea: 'id_' + v4(),
   clipBoxAreaTopRow: 'id_' + v4(),
   clipBoxAreaBottomRow: 'id_' + v4(),
@@ -28,11 +29,14 @@ const targetElementNames = {
   clipDataRow: 'class_' + v4(),
   clipDataRowTitleArea: 'class_' + v4(),
   clipDataRowContentArea: 'class_' + v4(),
+  dataLabelNameItem: 'class_' + v4(),
+  dataLabelNameItemSymbol: 'class_' + v4(),
+  dataLabelNameItemName: 'class_' + v4(),
 };
 
 const defaultConfig = {
   yLabelAreaWidth: 60,
-  xLabelAreaHeight: 90,
+  xLabelAreaHeight: 40,
   topAreaHeight: 40,
   topBottomMarginHeight: 10,
   dataLabelAreaHeight: 80,
@@ -401,6 +405,10 @@ export class Chart2 {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.bottomRowArea}`);
   }
 
+  private getBottomRowAreaDataLabelNamesArea(): HTMLDivElement | null {
+    return document.querySelector<HTMLDivElement>(`#${targetElementNames.bottomRowAreaDataLabelNamesArea}`);
+  }
+
   private getClipBoxAreaElement(): HTMLDivElement | null {
     return document.querySelector<HTMLDivElement>(`#${targetElementNames.clipBoxArea}`);
   }
@@ -537,7 +545,9 @@ export class Chart2 {
           </div>
         </div>
         <div id="${targetElementNames.bottomRowArea}" data-id="bottom-row-area">
-
+          <div id="${targetElementNames.bottomRowAreaDataLabelNamesArea}" data-id="bottom-row-area-data-label-names-area">
+            
+          </div>
         </div>
       </div>
       <style>
@@ -644,8 +654,21 @@ export class Chart2 {
         #${targetElementNames.bottomRowArea} {
           width: 100%;
           height: ${this.getDataLabelAreaHeight()}px;
-          display: block;
+          display: flex;
+          flex-wrap: wrap;
           position: relative;
+          justify-content: center;
+          align-items: center;
+          alugn-content: center;
+        }
+        #${targetElementNames.bottomRowAreaDataLabelNamesArea} {
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          position: relative;
+          justify-content: center;
+          align-items: center;
+          align-content: center;
         }
 
         .${targetElementNames.svg} {
@@ -694,6 +717,32 @@ export class Chart2 {
           position: relative;
           font-size: ${this.getClipFontSize()};
           color: #333;
+        }
+        .${targetElementNames.dataLabelNameItem} {
+          display: inline-flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: flex-start;
+          position: relative;
+          margin-right: 16px;
+        }
+        .${targetElementNames.dataLabelNameItem}:last-child {
+          margin-right: 0;
+        }
+        .${targetElementNames.dataLabelNameItemSymbol} {
+          width: 8px;
+          margin-right: 4px;
+          height: 8px;
+          display: flex;
+          border-radius: 10px;
+          position: relative;
+        }
+        .${targetElementNames.dataLabelNameItemName} {
+          width: calc(100% - 12px);
+          display: flex;
+          flex-wrap: wrap;
+          position: relative;
+          font-size: 12px;
         }
       </style>
     `.trim();
@@ -870,6 +919,28 @@ export class Chart2 {
     ;
   }
 
+  private drawDataLabelNames(): void {
+    const targetElement = this.getBottomRowAreaDataLabelNamesArea();
+    if (targetElement === null) {
+      return;
+    }
+
+    let htmlString = ``;
+    this.data?.forEach((item, index) => {
+      htmlString += `
+        <div class="${targetElementNames.dataLabelNameItem}">
+          <div class="${targetElementNames.dataLabelNameItemSymbol}" style="background-color: ${item.color ?? defaultConfig.color};">
+
+          </div>
+          <div class="${targetElementNames.dataLabelNameItemName}">
+            ${ item.name }
+          </div>
+        </div>
+      `.trim();
+    });
+    targetElement.innerHTML = htmlString;
+  }
+
   draw(): void {
     const target = this.getTargetElement();
     while (target?.hasChildNodes() === true) {
@@ -884,5 +955,6 @@ export class Chart2 {
     this.drawLine(); // data 의 line 을 그립니다.
     this.drawXAxis(); // x 축 라벨 영역을 그립니다.
     this.drawDataJoint(); // 데이터가 꺾이는 영역을 그립니다.
+    this.drawDataLabelNames(); // 데이터 이름 목록이 표시되는 영역을 그립니다.
   }
 }
