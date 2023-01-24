@@ -23,6 +23,7 @@ const targetElementNames = {
   clipBoxAreaBottomRow: 'id_' + v4(),
 
   show: 'class_' + v4(),
+  active: 'class_' + v4(),
   overflowVisible: 'class_' + v4(),
   svg: 'class_' + v4(),
   topBottomMarginBottom: 'class_' + v4(),
@@ -32,6 +33,8 @@ const targetElementNames = {
   dataLabelNameItem: 'class_' + v4(),
   dataLabelNameItemSymbol: 'class_' + v4(),
   dataLabelNameItemName: 'class_' + v4(),
+  xAxisLabelItem: 'class_' + v4(),
+  xAxisLabelItemTextArea: 'class_' + v4(),
 };
 
 const defaultConfig = {
@@ -451,6 +454,8 @@ export class Chart2 {
       }
     };
 
+    const xAxisLabelTargetElements = document.querySelectorAll(`.${targetElementNames.xAxisLabelItem}`);
+
     if (clipBoxAreaElement !== null) {
       if (event.type === 'mouseenter') {
         // left 계산하기
@@ -484,8 +489,16 @@ export class Chart2 {
           }
           clipBoxAreaBottomRowElement.innerHTML = htmlString;
         }
+
+        if (xAxisLabelTargetElements[index] !== null) {
+          xAxisLabelTargetElements[index].classList.add(targetElementNames.active);
+        }
       } else if (event.type === 'mousemove') {
         clipBoxAreaElement.style.top = pointer.y + 'px'; 
+      } else if (event.type === 'mouseleave') {
+        if (xAxisLabelTargetElements[index] !== null) {
+          xAxisLabelTargetElements[index].classList.remove(targetElementNames.active);
+        }
       }
     }
   }
@@ -605,7 +618,8 @@ export class Chart2 {
         #${targetElementNames.chartDisplayArea} {
           width: 100%;
           height: calc(100% - ${this.getXLabelAreaHeight() + this.getTopBottomMarginHeight()}px);
-          display: block;
+          display: flex;
+          flex-wrap: wrap;
           position: relative;
         }
         #${targetElementNames.xAxisDisplayArea} {
@@ -744,6 +758,32 @@ export class Chart2 {
           position: relative;
           font-size: 12px;
         }
+        .${targetElementNames.xAxisLabelItem} {
+          width: ${this.getDataOneColumnWidth()}px;
+          display: inline-flex;
+          flex-wrap: wrap;
+          margin-top: 14px;
+          justify-content: center;
+          align-items: center;
+          align-content: center;
+          position: relative;
+          box-sizing: border-box;
+          padding: 4px;
+          border-radius: 4px;
+          transition: 0.3s all;
+        }
+        .${targetElementNames.xAxisLabelItem}.${targetElementNames.active} {
+          background-color: rgba(0, 0, 0, 0.1);
+        }
+        .${targetElementNames.xAxisLabelItem}:first-child {
+          margin-left: ${this.getChartLeftMarginWidth() - (this.getDataOneColumnWidth() / 2)}px;
+        }
+        .${targetElementNames.xAxisLabelItemTextArea} {
+          display: inline-flex;
+          flex-wrap: wrap;
+          position: relative;
+          font-size: 12px;
+        }
       </style>
     `.trim();
     target.innerHTML = htmlString;
@@ -841,28 +881,22 @@ export class Chart2 {
   }
 
   private drawXAxis() {
-    const svgElement = this.getXAxisDisplayAreaSvgElement();
-    if (svgElement === null) {
+    const targetElement = this.getXAxisDisplayAreaElement();
+    if (targetElement === null) {
       return;
     }
 
-    select(svgElement)
-    .append('g')
-    .selectAll()
-    .data(this.xAxis?.labels ?? [])
-    .enter()
-    .append('text')
-    .text(d => d.text)
-    .attr("x", (d, i) => {
-      return (i * this.getDataOneColumnWidth()) + this.getChartLeftMarginWidth();
-    })
-    .attr("y", (d, i) => {
-      return 28;
-    })
-    .attr("font-family", "sans-serif")
-    .attr("font-size", "10px")
-    .attr("text-anchor", "middle")
-    ;
+    let htmlString = ``;
+    this.xAxis?.labels.forEach((item, index) => {
+      htmlString += `
+        <div class="${targetElementNames.xAxisLabelItem}" data-index="${index}">
+          <div class="${targetElementNames.xAxisLabelItemTextArea}" style="color: ${item.color ?? defaultConfig.fontColor};">
+            ${item.text}
+          </div>
+        </div>
+      `.trim();
+    });
+    targetElement.innerHTML = htmlString;
   }
 
   private drawDataJoint(): void {
@@ -891,10 +925,6 @@ export class Chart2 {
     .attr('stroke', '#aaa')
     .attr('stroke-width', 1)
     .attr('stroke-dasharray', '2, 2')
-    .on('mouseover', (event, d) =>{
-      console.log('event', event);
-      console.log('d', d);
-    })
     ;
 
     select(targetElement)
