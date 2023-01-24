@@ -1,4 +1,4 @@
-import { extent, merge, range, scaleLinear, select, union } from "d3";
+import { extent, line, merge, range, scaleLinear, select, union } from "d3";
 import { IChart2 } from "./chart2.interface";
 import { v4 } from 'uuid';
 
@@ -28,7 +28,9 @@ const defaultConfig = {
   topAreaHeight: 40,
   topBottomMarginHeight: 10,
   dataLabelAreaHeight: 80,
-  dataOneColumnWidth: 80,
+  chartLeftMarginWidth: 30,
+  dataOneColumnWidth: 60,
+  color: '#333',
 };
 
 export class Chart2 {
@@ -39,6 +41,7 @@ export class Chart2 {
   xLabelAreaHeight?: number;
   dataOneColumnWidth?: number;
   topBottomMarginHeight?: number;
+  chartLeftMarginWidth?: number;
   data?: IChart2.Data[];
   xAxis?: IChart2.XAxis;
   yAxis?: IChart2.YAxis;
@@ -51,6 +54,7 @@ export class Chart2 {
     this.xLabelAreaHeight = params?.xLabelAreaHeight;
     this.dataOneColumnWidth = params?.dataOneColumnWidth;
     this.topBottomMarginHeight = params?.topBottomMarginHeight;
+    this.chartLeftMarginWidth = params?.chartLeftMarginWidth;
     this.data = params?.data;
     this.xAxis = params?.xAxis;
     this.yAxis = params?.yAxis;
@@ -193,6 +197,27 @@ export class Chart2 {
       return defaultConfig.topBottomMarginHeight;
     }
     return this.topBottomMarginHeight;
+  }
+
+  private getChartLeftMarginWidth(): number {
+    if (this.chartLeftMarginWidth === undefined) {
+      console.warn(`chartLeftMarginWidth 값이 설정되어 있지 않아 default 값인 ${defaultConfig.chartLeftMarginWidth} 으로 적용됩니다.`);
+      return defaultConfig.chartLeftMarginWidth;
+    }
+    return this.chartLeftMarginWidth;
+  }
+
+  private getRightAreaContentAreaWidth(): string {
+    if (this.data === undefined) {
+      return '100%';
+    }
+
+    const firstData = this.data[0];
+    if (firstData === undefined) {
+      return '100%';
+    }
+
+    return (this.getDataOneColumnWidth() * firstData.datas.length) + 'px';
   }
 
   private getYRangeAndLinear() {
@@ -358,7 +383,8 @@ export class Chart2 {
           background-color: rgba(0, 0, 0, 0.3);
         }
         #${targetElementNames.rightAreaContentArea} {
-          width: 100%;
+          /* width: 100%; */
+          width: ${this.getRightAreaContentAreaWidth()};
           height: 100%;
           display: flex;
           flex-wrap: wrap;
@@ -445,12 +471,36 @@ export class Chart2 {
       .append('circle')
       .attr('r', 3)
       .attr('cx', (d, i) => {
-        return (i * 60) + 78;
+        return (i * this.getDataOneColumnWidth()) + this.getChartLeftMarginWidth();
       })
       .attr('cy', (d, i) => {
         return this.getPointDrawMaterials().yRangeAndLinear(d);
       })
-      .attr('fill', item.color ?? '#333')
+      .attr('fill', item.color ?? defaultConfig.color)
+      ;
+    });
+  }
+
+  private drawLine(): void {
+    const svgElement = this.getChartDisplayAreaSvgElement();
+    if (svgElement === null) {
+      return;
+    }
+
+    this.data?.forEach((item, index) => {
+      const lineGenerator = line();
+      const points: [number, number][] = item.datas.map((x, i) => {
+        return [(i * this.getDataOneColumnWidth()) + this.getChartLeftMarginWidth(), this.getPointDrawMaterials().yRangeAndLinear(x)];
+      });
+      console.log('@@points', points);
+      const pathOfLine = lineGenerator(points);
+      select(svgElement)
+      .append('g')
+      .append('path')
+      .attr('d', pathOfLine)
+      .attr('stroke-width', 1)
+      .attr("fill", 'none')
+      .attr("stroke", item.color ?? defaultConfig.color)
       ;
     });
   }
@@ -466,5 +516,6 @@ export class Chart2 {
     this.drawBasicContainer(); // 기본 골격을 그립니다.
     this.drawYAxis(); // y 축을 그립니다.
     this.drawPoint(); // data 의 point 를 그립니다.
+    this.drawLine(); // data 의 line 을 그립니다.
   }
 }
