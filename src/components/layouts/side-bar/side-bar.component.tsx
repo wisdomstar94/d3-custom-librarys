@@ -11,6 +11,7 @@ export default function SideBar(props: ISideBar.Props) {
   const [menuItems, setMenuItems] = useState<ISideBar.MenuItem[]>([
     { name: '첫번째로 만들어보는 차트', link: '/first-make-chart' },
     { name: 'chart2', link: '/chart2' },
+    { name: 'chart3', link: '/chart3' },
   ]);
 
   const menuItemClick = useCallback((item: ISideBar.MenuItem) => {
