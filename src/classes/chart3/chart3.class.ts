@@ -1,6 +1,6 @@
 import { IChart3 } from "./chart3.interface";
 import { v4 } from 'uuid';
-import { arc, select } from "d3";
+import { arc, scaleLinear, select } from "d3";
 
 export class Chart3 {
   elementNameSpaces = {
@@ -30,6 +30,8 @@ export class Chart3 {
     outerRadius: 100,
     pieMargin: 20,
     pieWeight: 40,
+    maxAngle: 6.3,
+    color: '#f00',
   };
   options?: IChart3.Options;
 
@@ -225,6 +227,23 @@ export class Chart3 {
     const minSize = svgWidth > svgHeight ? svgHeight : svgWidth;
     const translate = `translate(${(moreSmallSize === 'height' ? (svgWidth / 2) : (minSize / 2))}, ${(moreSmallSize === 'width' ? (svgHeight / 2) : (minSize / 2))})`;
 
+    const totalValue = this.options?.series?.reduce((prev, current) => {
+      return prev + current.data[0];
+    }, 0) ?? 0;
+    const scaleConverter = scaleLinear().domain([0, totalValue]).range([0, this.defaultConfig.maxAngle]);
+    const needInfoItems: IChart3.NeedInfoItem[] = [];
+    this.options?.series?.forEach((item, index) => {
+      const value = item.data[0];
+      const angleSize = scaleConverter(value);
+      const startAngle = index === 0 ? 0 : needInfoItems[index - 1].endAngle;
+      const endAngle = startAngle + angleSize;
+      const newItem = {
+        startAngle,
+        endAngle,
+      };
+      needInfoItems.push(newItem);
+    });
+
     this.options?.series?.forEach((item, index) => {
       // innerRadius의 값이 6.3 이면 360도!
 
@@ -237,12 +256,12 @@ export class Chart3 {
           innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight(),
           outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2),
           // outerRadius 와 innerRadius 사이의 영역에 호가 그려집니다. 즉, 호의 굵기를 크게하려면 outerRadius - innerRadius 값이 크게 나오게 하면 됨.
-          startAngle: 0, // 호의 시작 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
-          endAngle: 6.3, // 호의 끝 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
+          startAngle: needInfoItems[index].startAngle, // 호의 시작 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
+          endAngle: needInfoItems[index].endAngle, // 호의 끝 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
           // 각도 증가폭이 커서 소숫점 단위로 증가시켜야 그려지는 각도가 조금씩만 증가함.
         });
       })
-      .attr("fill", "green")
+      .attr("fill", item.color ?? this.defaultConfig.color)
       .attr("transform", `${translate}`)
       ;
     });

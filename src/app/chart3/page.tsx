@@ -8,10 +8,17 @@ const FirstMakeChartPage = () => {
     myChart3.setOptions((prev) => {
       const newObj = prev !== undefined ? { ...prev } : {};
       newObj.targetSelector = '#target';
+      newObj.pieWeight = 30;
       newObj.series = [
         {
           name: 'angular',
           data: [30],
+          color: '#f00',
+        },
+        {
+          name: 'react',
+          data: [90],
+          color: '#00f',
         },
       ]
       return newObj;

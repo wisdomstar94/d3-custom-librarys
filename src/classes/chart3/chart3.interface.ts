@@ -2,6 +2,12 @@ export declare namespace IChart3 {
   export interface Series {
     name: string;
     data: number[];
+    color?: string;
+  }
+
+  export interface NeedInfoItem {
+    startAngle: number;
+    endAngle: number;
   }
 
   export interface Options {
