@@ -8,6 +8,12 @@ const FirstMakeChartPage = () => {
     myChart3.setOptions((prev) => {
       const newObj = prev !== undefined ? { ...prev } : {};
       newObj.targetSelector = '#target';
+      newObj.series = [
+        {
+          name: 'angular',
+          data: [30],
+        },
+      ]
       return newObj;
     });
     myChart3.draw();
@@ -18,11 +24,11 @@ const FirstMakeChartPage = () => {
       <h2>
         chart3...
       </h2>
-      <article>
+      <div>
         <div id="target" style={{ width: '600px', position: 'relative', border: '1px solid #ccc' }}>
 
         </div>
-      </article>
+      </div>
       <p>
         <a href="https://dribbble.com/shots/5457182-Samsa-Dashboard-Overview/attachments" target="_blank" rel="noreferrer">
           https://dribbble.com/shots/5457182-Samsa-Dashboard-Overview/attachments

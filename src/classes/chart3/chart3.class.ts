@@ -1,17 +1,35 @@
 import { IChart3 } from "./chart3.interface";
 import { v4 } from 'uuid';
+import { arc, select } from "d3";
 
 export class Chart3 {
+  elementNameSpaces = {
+    svg: 'http://www.w3.org/2000/svg',
+  };
   elementSelectors = {
     mainContainer: 'class_' + v4(),
     topRow: 'class_' + v4(),
     contentRow: 'class_' + v4(),
     leftArea: 'class_' + v4(),
+    leftAreaSvg: 'class_' + v4(),
     rightArea: 'class_' + v4(),
+    svg: 'class_' + v4(),
+  };
+  elements = {
+    mainContainer: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.mainContainer),
+    topRow: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.topRow),
+    contentRow: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.contentRow),
+    leftArea: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.leftArea),
+    leftAreaSvg: () => document.querySelector<SVGElement>('.' + this.elementSelectors.leftAreaSvg),
+    rightArea: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.rightArea),
   };
   defaultConfig = {
     leftAreaWidth: '50%',
     rightAreaWidth: '50%',
+    innerRadius: 50,
+    outerRadius: 100,
+    pieMargin: 20,
+    pieWeight: 40,
   };
   options?: IChart3.Options;
 
@@ -22,6 +40,37 @@ export class Chart3 {
   setOptions(callbackFn: (prev: IChart3.Options | undefined) => IChart3.Options): Chart3 {
     this.options = callbackFn(this.options);
     return this;
+  }
+
+  /*
+    getter function
+  */
+  getInnerRadius(): number {
+    if (this.options?.innerRadius === undefined) {
+      return this.defaultConfig.innerRadius;
+    }
+    return this.options.innerRadius;
+  }
+
+  getOuterRadius(): number {
+    if (this.options?.outerRadius === undefined) {
+      return this.defaultConfig.outerRadius;
+    }
+    return this.options.outerRadius;
+  }
+
+  getPieMargin(): number {
+    if (this.options?.pieMargin === undefined) {
+      return this.defaultConfig.pieMargin;
+    }
+    return this.options.pieMargin;
+  }
+
+  getPieWeight(): number {
+    if (this.options?.pieWeight === undefined) {
+      return this.defaultConfig.pieWeight;
+    }
+    return this.options.pieWeight;
   }
 
   /*
@@ -36,6 +85,13 @@ export class Chart3 {
 
   /*
     get create element return function 
+  */
+  getMainContainerElement() {
+    return document.querySelector<HTMLElement>(`.${this.elementSelectors.mainContainer}`)
+  }
+
+  /*
+    insert element function
   */
   insertBasicContainerStyles() {
     const targetSelectorElement = this.getTargetSelectorElement();
@@ -57,7 +113,7 @@ export class Chart3 {
       }
     }
 
-    // style
+    // insert style
     this.insertBasicContainerStyles();
 
     // main-container
@@ -83,12 +139,20 @@ export class Chart3 {
     div_leftArea.setAttribute('data-box-title', 'left-area');
     div_contentRow1.appendChild(div_leftArea);
 
+    // main-container content-row left-area svg
+    const div_leftArea_svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    div_leftArea_svg.classList.add(this.elementSelectors.svg);
+    div_leftArea_svg.classList.add(this.elementSelectors.leftAreaSvg);
+    div_leftArea_svg.setAttribute('data-box-title', 'left-area-svg');
+    div_leftArea.appendChild(div_leftArea_svg);
+
     // main-container content-row right-area
     const div_rightArea = document.createElement('div');
     div_rightArea.classList.add(this.elementSelectors.rightArea);
     div_rightArea.setAttribute('data-box-title', 'right-area');
     div_contentRow1.appendChild(div_rightArea);
 
+    // insert basic elements
     targetSelectorElement.appendChild(div_mainContainer);
   }
 
@@ -111,7 +175,6 @@ export class Chart3 {
           display: flex;
           flex-wrap: wrap;
           box-sizing: border-box;
-          /* padding: 12px; */
           position: relative;
         }
         .${this.elementSelectors.mainContainer} .${this.elementSelectors.contentRow} {
@@ -123,6 +186,7 @@ export class Chart3 {
         }
         .${this.elementSelectors.mainContainer} .${this.elementSelectors.contentRow} .${this.elementSelectors.leftArea} {
           width: 50%;
+          aspect-ratio: 1 / 0.8;
           display: flex;
           flex-wrap: wrap;
           position: relative;
@@ -135,6 +199,13 @@ export class Chart3 {
           position: relative;
           box-sizing: border-box;
         }
+
+        .${this.elementSelectors.svg} {
+          width: 100%;
+          height: 100%;
+          display: block;
+          position: relative;
+        }
       </style>
     `.trim();
   }
@@ -142,8 +213,43 @@ export class Chart3 {
   /*
     draw function 
   */
+  drawPie(): void {
+    const leftAreaSvg = this.elements.leftAreaSvg();
+    if (leftAreaSvg === null) {
+      return;
+    }
 
-  draw() {
+    const svgWidth = leftAreaSvg.clientWidth;
+    const svgHeight = leftAreaSvg.clientHeight;
+    const moreSmallSize = svgWidth > svgHeight ? 'height' : 'width';
+    const minSize = svgWidth > svgHeight ? svgHeight : svgWidth;
+    const translate = `translate(${(moreSmallSize === 'height' ? (svgWidth / 2) : (minSize / 2))}, ${(moreSmallSize === 'width' ? (svgHeight / 2) : (minSize / 2))})`;
+
+    this.options?.series?.forEach((item, index) => {
+      // innerRadius의 값이 6.3 이면 360도!
+
+      select(leftAreaSvg)
+      .append("g")
+      .append("path")
+      // .attr("class", "arc")
+      .attr("d", (d) => {
+        return arc()({
+          innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight(),
+          outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2),
+          // outerRadius 와 innerRadius 사이의 영역에 호가 그려집니다. 즉, 호의 굵기를 크게하려면 outerRadius - innerRadius 값이 크게 나오게 하면 됨.
+          startAngle: 0, // 호의 시작 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
+          endAngle: 6.3, // 호의 끝 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
+          // 각도 증가폭이 커서 소숫점 단위로 증가시켜야 그려지는 각도가 조금씩만 증가함.
+        });
+      })
+      .attr("fill", "green")
+      .attr("transform", `${translate}`)
+      ;
+    });
+  }
+
+  draw(): void {
     this.insertBasicContainers();
+    this.drawPie();
   }
 }
