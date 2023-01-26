@@ -5,6 +5,7 @@ export declare namespace IChart3 {
   }
 
   export interface Options {
-    series: Series[];
+    targetSelector?: string;
+    series?: Series[];
   }
 }
