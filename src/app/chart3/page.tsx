@@ -20,6 +20,11 @@ const FirstMakeChartPage = () => {
           data: [90],
           color: '#00f',
         },
+        {
+          name: 'vue',
+          data: [40],
+          color: '#0f0',
+        },
       ]
       return newObj;
     });

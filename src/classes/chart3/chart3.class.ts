@@ -1,6 +1,6 @@
 import { IChart3 } from "./chart3.interface";
 import { v4 } from 'uuid';
-import { arc, scaleLinear, select } from "d3";
+import { arc, easeCubicOut, easeLinear, interpolate, scaleLinear, select } from "d3";
 
 export class Chart3 {
   elementNameSpaces = {
@@ -246,7 +246,6 @@ export class Chart3 {
 
     this.options?.series?.forEach((item, index) => {
       // innerRadius의 값이 6.3 이면 360도!
-
       select(leftAreaSvg)
       .append("g")
       .append("path")
@@ -257,12 +256,35 @@ export class Chart3 {
           outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2),
           // outerRadius 와 innerRadius 사이의 영역에 호가 그려집니다. 즉, 호의 굵기를 크게하려면 outerRadius - innerRadius 값이 크게 나오게 하면 됨.
           startAngle: needInfoItems[index].startAngle, // 호의 시작 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
-          endAngle: needInfoItems[index].endAngle, // 호의 끝 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
+          endAngle: needInfoItems[index].startAngle, // 호의 끝 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
           // 각도 증가폭이 커서 소숫점 단위로 증가시켜야 그려지는 각도가 조금씩만 증가함.
         });
       })
       .attr("fill", item.color ?? this.defaultConfig.color)
       .attr("transform", `${translate}`)
+      .transition()
+      .delay(index * 200)
+      .duration(200)
+      .ease(easeLinear)
+      .attrTween("d", (d: any) => {
+        const start = {
+          innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight(),
+          outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2),
+          // outerRadius 와 innerRadius 사이의 영역에 호가 그려집니다. 즉, 호의 굵기를 크게하려면 outerRadius - innerRadius 값이 크게 나오게 하면 됨.
+          startAngle: needInfoItems[index].startAngle, // 호의 시작 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
+          endAngle: needInfoItems[index].startAngle, // 호의 끝 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
+        };
+        const end = {
+          innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight(),
+          outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2),
+          startAngle: needInfoItems[index].startAngle, 
+          endAngle: needInfoItems[index].endAngle,
+        };
+        const interpolate1 = interpolate(start, end);
+        return function (t: number) {
+          return arc()(interpolate1(t)) ?? '';
+        };
+      })
       ;
     });
   }
