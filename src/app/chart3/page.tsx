@@ -9,8 +9,8 @@ const FirstMakeChartPage = () => {
       ...(prev ?? {}),
       targetSelector: '#target',
       pieWeight: 50,
-      leftAreaWidth: '70%',
-      rightAreaWidth: '30%',
+      leftAreaWidth: '60%',
+      rightAreaWidth: '40%',
       series: [
         {
           name: 'Bitcoin',

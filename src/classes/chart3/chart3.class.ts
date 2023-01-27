@@ -23,6 +23,8 @@ export class Chart3 {
     seriesData: 'class_' + v4(),
     active: 'class_' + v4(),
     mobile: 'class_' + v4(),
+
+    dropShadow: 'id_' + v4(),
   };
   elements = {
     mainContainer: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.mainContainer),
@@ -186,6 +188,23 @@ export class Chart3 {
     div_leftArea_svg.classList.add(this.elementSelectors.leftAreaSvg);
     div_leftArea_svg.setAttribute('data-box-title', 'left-area-svg');
     div_leftArea.appendChild(div_leftArea_svg);
+
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    div_leftArea_svg.appendChild(defs);
+
+    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+    filter.setAttribute('id', this.elementSelectors.dropShadow);
+    filter.setAttribute('x', '0');
+    filter.setAttribute('y', '0');
+    defs.appendChild(filter);
+
+    const feDropShadow = document.createElementNS('http://www.w3.org/2000/svg', 'feDropShadow');
+    feDropShadow.setAttribute('dx', '5');
+    feDropShadow.setAttribute('dy', '5');
+    feDropShadow.setAttribute('stdDeviation', '5');
+    feDropShadow.setAttribute('flood-color', '#000');
+    feDropShadow.setAttribute('flood-opacity', '0.4');
+    filter.appendChild(feDropShadow);
 
     // main-container content-row right-area
     const div_rightArea = document.createElement('div');
@@ -369,6 +388,7 @@ export class Chart3 {
             this.getUlSeriesLiElements()[index]?.classList.add(this.elementSelectors.active);
 
             select(targetPath)
+            .attr('filter', `url(#${this.elementSelectors.dropShadow})`)
             .transition()
             .duration(100)
             .ease(easeLinear)
@@ -396,6 +416,7 @@ export class Chart3 {
             this.getUlSeriesLiElements()[index]?.classList.remove(this.elementSelectors.active);
 
             select(targetPath)
+            .attr('filter', ``)
             .transition()
             .duration(100)
             .ease(easeLinear)
@@ -424,6 +445,7 @@ export class Chart3 {
 
       g
       .append("path")
+      // .attr('filter', `url(#${this.elementSelectors.dropShadow})`)
       .attr('class', this.elementSelectors.piePiece)
       .attr('data-class', 'pie-piece')
       .attr('data-index', index)
