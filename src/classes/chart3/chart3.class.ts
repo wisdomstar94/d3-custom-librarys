@@ -1,6 +1,6 @@
 import { IChart3 } from "./chart3.interface";
 import { v4 } from 'uuid';
-import { arc, easeCubicOut, easeLinear, interpolate, scaleLinear, select } from "d3";
+import { arc, easeCubicOut, easeLinear, format, interpolate, scaleLinear, select } from "d3";
 
 export class Chart3 {
   elementNameSpaces = {
@@ -15,6 +15,11 @@ export class Chart3 {
     rightArea: 'class_' + v4(),
     svg: 'class_' + v4(),
     piePiece: 'class_' + v4(),
+    ulSeriesList: 'class_' + v4(),
+    listItem: 'class_' + v4(),
+    seriesSymbol: 'class_' + v4(),
+    seriesName: 'class_' + v4(),
+    seriesData: 'class_' + v4(),
   };
   elements = {
     mainContainer: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.mainContainer),
@@ -23,6 +28,7 @@ export class Chart3 {
     leftArea: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.leftArea),
     leftAreaSvg: () => document.querySelector<SVGElement>('.' + this.elementSelectors.leftAreaSvg),
     rightArea: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.rightArea),
+    ulSeriesList: () => document.querySelector<HTMLUListElement>('.' + this.elementSelectors.ulSeriesList),
   };
   defaultConfig = {
     leftAreaWidth: '50%',
@@ -163,6 +169,12 @@ export class Chart3 {
     div_rightArea.setAttribute('data-box-title', 'right-area');
     div_contentRow1.appendChild(div_rightArea);
 
+    // main-container content-row right-area ul-series-list
+    const ul_series_list = document.createElement('ul');
+    ul_series_list.classList.add(this.elementSelectors.ulSeriesList);
+    ul_series_list.setAttribute('data-box-title', 'ul-series-list');
+    div_rightArea.appendChild(ul_series_list);
+
     // insert basic elements
     targetSelectorElement.appendChild(div_mainContainer);
   }
@@ -209,6 +221,49 @@ export class Chart3 {
           flex-wrap: wrap;
           position: relative;
           box-sizing: border-box;
+          align-items: flex-start;
+        }
+        .${this.elementSelectors.ulSeriesList} {
+          width: 100%;
+          display: block;
+          margin: 0;
+          padding: 14px;
+          position: relative;
+          box-sizing: border-box;
+        }
+        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} {
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          position: relative;
+          align-items: center;
+          align-content: center;
+          justify-content: flex-start;
+          margin-botton: 10px;
+        }
+        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem}:last-child {
+          margin-bottom: 0;
+        }
+        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesSymbol} {
+          width: 6px;
+          height: 6px;
+          display: inline-flex;
+          border-radius: 20px;
+          margin-right: 10px;
+        }
+        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesName} {
+          display: inline-flex;
+          margin-right: 10px;
+          font-size: 12px;
+          color: #333;
+          position: relative;
+        }
+        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesData} {
+          display: inline-flex;
+          margin-right: 10px;
+          font-size: 12px;
+          color: #333;
+          position: relative;
         }
 
         .${this.elementSelectors.svg} {
@@ -363,8 +418,38 @@ export class Chart3 {
     });
   }
 
+  drawSeries(): void {
+    const ulSeriesList = this.elements.ulSeriesList();
+    if (ulSeriesList === null) {
+      return;
+    }
+
+    this.options?.series?.forEach((item, index) => {
+      const li = document.createElement('li');
+      li.setAttribute('class', this.elementSelectors.listItem);
+
+      const div_symbol = document.createElement('div');
+      div_symbol.setAttribute('class', this.elementSelectors.seriesSymbol);
+      div_symbol.style.backgroundColor = item.color ?? this.defaultConfig.color;
+      li.appendChild(div_symbol);
+
+      const div_series_name = document.createElement('div');
+      div_series_name.setAttribute('class', this.elementSelectors.seriesName);
+      div_series_name.innerHTML = item.name;
+      li.appendChild(div_series_name);
+
+      const div_series_data = document.createElement('div');
+      div_series_data.setAttribute('class', this.elementSelectors.seriesData);
+      div_series_data.textContent = format(",")(item.data[0]);
+      li.appendChild(div_series_data);
+
+      ulSeriesList.appendChild(li);
+    });
+  }
+
   draw(): void {
     this.insertBasicContainers();
     this.drawPie();
+    this.drawSeries();
   }
 }
