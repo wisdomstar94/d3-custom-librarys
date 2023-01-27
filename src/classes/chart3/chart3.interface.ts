@@ -17,5 +17,6 @@ export declare namespace IChart3 {
     outerRadius?: number;
     pieMargin?: number;
     pieWeight?: number;
+    boundaryMargin?: number;
   }
 }

@@ -5,11 +5,11 @@ import { useEffect } from "react";
 const FirstMakeChartPage = () => {
   useEffect(() => {
     const myChart3 = new Chart3();
-    myChart3.setOptions((prev) => {
-      const newObj = prev !== undefined ? { ...prev } : {};
-      newObj.targetSelector = '#target';
-      newObj.pieWeight = 30;
-      newObj.series = [
+    myChart3.setOptions((prev) => ({
+      ...(prev ?? {}),
+      targetSelector: '#target',
+      pieWeight: 30,
+      series: [
         {
           name: 'angular',
           data: [30],
@@ -25,9 +25,9 @@ const FirstMakeChartPage = () => {
           data: [40],
           color: '#0f0',
         },
-      ]
-      return newObj;
-    });
+      ],
+      boundaryMargin: 0.03,
+    }));
     myChart3.draw();
   }, []);
 

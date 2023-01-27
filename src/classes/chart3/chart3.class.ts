@@ -30,8 +30,9 @@ export class Chart3 {
     outerRadius: 100,
     pieMargin: 20,
     pieWeight: 40,
-    maxAngle: 6.3,
+    maxAngle: 6.285,
     color: '#f00',
+    boundaryMargin: 0,
   };
   options?: IChart3.Options;
 
@@ -47,32 +48,39 @@ export class Chart3 {
   /*
     getter function
   */
-  getInnerRadius(): number {
+  private getInnerRadius(): number {
     if (this.options?.innerRadius === undefined) {
       return this.defaultConfig.innerRadius;
     }
     return this.options.innerRadius;
   }
 
-  getOuterRadius(): number {
+  private getOuterRadius(): number {
     if (this.options?.outerRadius === undefined) {
       return this.defaultConfig.outerRadius;
     }
     return this.options.outerRadius;
   }
 
-  getPieMargin(): number {
+  private getPieMargin(): number {
     if (this.options?.pieMargin === undefined) {
       return this.defaultConfig.pieMargin;
     }
     return this.options.pieMargin;
   }
 
-  getPieWeight(): number {
+  private getPieWeight(): number {
     if (this.options?.pieWeight === undefined) {
       return this.defaultConfig.pieWeight;
     }
     return this.options.pieWeight;
+  }
+
+  private getBoundaryMargin(): number {
+    if (this.options?.boundaryMargin === undefined) {
+      return this.defaultConfig.boundaryMargin;
+    }
+    return this.options.boundaryMargin;
   }
 
   /*
@@ -278,7 +286,7 @@ export class Chart3 {
           innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight(),
           outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2),
           startAngle: needInfoItems[index].startAngle, 
-          endAngle: needInfoItems[index].endAngle,
+          endAngle: needInfoItems[index].endAngle - this.getBoundaryMargin(),
         };
         const interpolate1 = interpolate(start, end);
         return function (t: number) {
