@@ -14,6 +14,7 @@ export class Chart3 {
     leftAreaSvg: 'class_' + v4(),
     rightArea: 'class_' + v4(),
     svg: 'class_' + v4(),
+    piePiece: 'class_' + v4(),
   };
   elements = {
     mainContainer: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.mainContainer),
@@ -30,7 +31,7 @@ export class Chart3 {
     outerRadius: 100,
     pieMargin: 20,
     pieWeight: 40,
-    maxAngle: 6.285,
+    maxAngle: 6.285, // arc 그릴 때, innerRadius의 값이 6.285 이면 360도!
     color: '#f00',
     boundaryMargin: 0,
   };
@@ -216,6 +217,9 @@ export class Chart3 {
           display: block;
           position: relative;
         }
+        .${this.elementSelectors.piePiece} {
+          position: relative;
+        }
       </style>
     `.trim();
   }
@@ -233,7 +237,9 @@ export class Chart3 {
     const svgHeight = leftAreaSvg.clientHeight;
     const moreSmallSize = svgWidth > svgHeight ? 'height' : 'width';
     const minSize = svgWidth > svgHeight ? svgHeight : svgWidth;
-    const translate = `translate(${(moreSmallSize === 'height' ? (svgWidth / 2) : (minSize / 2))}, ${(moreSmallSize === 'width' ? (svgHeight / 2) : (minSize / 2))})`;
+    const translateX = (moreSmallSize === 'height' ? (svgWidth / 2) : (minSize / 2));
+    const translateY = (moreSmallSize === 'width' ? (svgHeight / 2) : (minSize / 2));
+    const translate = `translate(${translateX}, ${translateY})`;
 
     const totalValue = this.options?.series?.reduce((prev, current) => {
       return prev + current.data[0];
@@ -252,24 +258,84 @@ export class Chart3 {
       needInfoItems.push(newItem);
     });
 
-    this.options?.series?.forEach((item, index) => {
-      // innerRadius의 값이 6.3 이면 360도!
+    const g = 
       select(leftAreaSvg)
       .append("g")
+    ;
+    this.options?.series?.forEach((item, index) => {
+      // draw pie piece 
+      const pathMouseEvent = (event: MouseEvent) => {
+        // console.log('event', event);
+        const targetPath = event.target as SVGPathElement;
+        switch (event.type) {
+          case 'mouseover': {
+            const parentG = targetPath.parentElement;
+            parentG?.insertAdjacentElement('beforeend', targetPath);
+
+            select(targetPath)
+            .transition()
+            .duration(100)
+            .ease(easeLinear)
+            .attrTween("d", (d: any) => {
+              const start = {
+                innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight(),
+                outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2),
+                startAngle: needInfoItems[index].startAngle, 
+                endAngle: needInfoItems[index].endAngle - this.getBoundaryMargin(),
+              };
+              const end = {
+                innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight() - 5,
+                outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) + 5,
+                startAngle: needInfoItems[index].startAngle - 0.1, 
+                endAngle: needInfoItems[index].endAngle - this.getBoundaryMargin() + 0.1,
+              };
+              const interpolate1 = interpolate(start, end);
+              return function (t: number) {
+                return arc()(interpolate1(t)) ?? '';
+              };
+            })
+            ;
+          } break;
+          case 'mouseout': {
+            select(targetPath)
+            .transition()
+            .duration(100)
+            .ease(easeLinear)
+            .attrTween("d", (d: any) => {
+              const start = {
+                innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight() - 5,
+                outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) + 5,
+                startAngle: needInfoItems[index].startAngle - 0.1, 
+                endAngle: needInfoItems[index].endAngle - this.getBoundaryMargin() + 0.1,
+              };
+              const end = {
+                innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight(),
+                outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2),
+                startAngle: needInfoItems[index].startAngle, 
+                endAngle: needInfoItems[index].endAngle - this.getBoundaryMargin(),
+              };
+              const interpolate1 = interpolate(start, end);
+              return function (t: number) {
+                return arc()(interpolate1(t)) ?? '';
+              };
+            })
+            ;
+          } break;
+        }
+      };
+
+      g
       .append("path")
-      // .attr("class", "arc")
-      .attr("d", (d) => {
-        return arc()({
-          innerRadius: ((minSize - (this.getPieMargin() * 2)) / 2) - this.getPieWeight(),
-          outerRadius: ((minSize - (this.getPieMargin() * 2)) / 2),
-          // outerRadius 와 innerRadius 사이의 영역에 호가 그려집니다. 즉, 호의 굵기를 크게하려면 outerRadius - innerRadius 값이 크게 나오게 하면 됨.
-          startAngle: needInfoItems[index].startAngle, // 호의 시작 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
-          endAngle: needInfoItems[index].startAngle, // 호의 끝 각도, 0 이 12시 방향이고 값이 커질 수록 시계방향으로 이동됨.
-          // 각도 증가폭이 커서 소숫점 단위로 증가시켜야 그려지는 각도가 조금씩만 증가함.
-        });
-      })
-      .attr("fill", item.color ?? this.defaultConfig.color)
+      .attr('class', this.elementSelectors.piePiece)
+      .attr('data-class', 'pie-piece')
+      .attr('data-index', index)
+      .attr('data-translate-x', translateX)
+      .attr('data-translate-y', translateY)
       .attr("transform", `${translate}`)
+      // .attr('transform-origin', 'center')
+      .attr("fill", item.color ?? this.defaultConfig.color)
+      .on('mouseover', pathMouseEvent)
+      .on('mouseout', pathMouseEvent)
       .transition()
       .delay(index * 200)
       .duration(200)
