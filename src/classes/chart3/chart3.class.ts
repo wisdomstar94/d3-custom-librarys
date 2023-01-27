@@ -1,6 +1,7 @@
 import { IChart3 } from "./chart3.interface";
 import { v4 } from 'uuid';
 import { arc, easeCubicOut, easeLinear, format, interpolate, scaleLinear, select } from "d3";
+import { debounceTime, fromEvent, Subscription } from 'rxjs';
 
 export class Chart3 {
   elementNameSpaces = {
@@ -21,6 +22,7 @@ export class Chart3 {
     seriesName: 'class_' + v4(),
     seriesData: 'class_' + v4(),
     active: 'class_' + v4(),
+    mobile: 'class_' + v4(),
   };
   elements = {
     mainContainer: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.mainContainer),
@@ -39,16 +41,32 @@ export class Chart3 {
     maxAngle: 6.285, // arc 그릴 때, innerRadius의 값이 6.285 이면 360도!
     color: '#f00',
     boundaryMargin: 0,
+    windowMobileMaxWidth: 600,
   };
   options?: IChart3.Options;
+  windowResizeSubscription?: Subscription;
 
   constructor(options?: IChart3.Options) {
     this.options = options;
+    this.windowResizeSubscription = 
+      fromEvent(window, 'resize')
+      .pipe(debounceTime(300))
+      .subscribe((event) => {
+        this.draw();
+      })
+    ;
   }
 
   setOptions(callbackFn: (prev: IChart3.Options | undefined) => IChart3.Options): Chart3 {
     this.options = callbackFn(this.options);
     return this;
+  }
+
+  /*
+    is funciton
+  */
+  private isMobile() {
+    return (this.getTargetSelectorElement()?.clientWidth ?? 0) < this.defaultConfig.windowMobileMaxWidth;
   }
 
   /*
@@ -140,6 +158,9 @@ export class Chart3 {
     const div_mainContainer = document.createElement('div');
     div_mainContainer.setAttribute('data-box-title', 'main-container');
     div_mainContainer.classList.add(this.elementSelectors.mainContainer);
+    if (this.isMobile()) {
+      div_mainContainer.classList.add(this.elementSelectors.mobile);
+    }
     
     // main-container top-row
     const div_topRow = document.createElement('div');
@@ -218,6 +239,9 @@ export class Chart3 {
           position: relative;
           box-sizing: border-box;
         }
+        .${this.elementSelectors.mainContainer}.${this.elementSelectors.mobile} .${this.elementSelectors.contentRow} .${this.elementSelectors.leftArea} {
+          width: 100%;
+        }
         .${this.elementSelectors.mainContainer} .${this.elementSelectors.contentRow} .${this.elementSelectors.rightArea} {
           width: ${this.getRightAreaWidth()};
           display: flex;
@@ -226,7 +250,10 @@ export class Chart3 {
           box-sizing: border-box;
           align-items: flex-start;
         }
-        .${this.elementSelectors.ulSeriesList} {
+        .${this.elementSelectors.mainContainer}.${this.elementSelectors.mobile} .${this.elementSelectors.contentRow} .${this.elementSelectors.rightArea} {
+          width: 100%;
+        }
+        .${this.elementSelectors.mainContainer} .${this.elementSelectors.ulSeriesList} {
           width: 100%;
           display: block;
           margin: 0;
@@ -234,7 +261,7 @@ export class Chart3 {
           position: relative;
           box-sizing: border-box;
         }
-        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} {
+        .${this.elementSelectors.mainContainer} .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} {
           width: 100%;
           display: flex;
           flex-wrap: wrap;
@@ -246,27 +273,27 @@ export class Chart3 {
           padding: 12px;
           border-bottom: 1px solid #F2F4F3;
         }
-        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem}:last-child {
+        .${this.elementSelectors.mainContainer} .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem}:last-child {
           margin-bottom: 0;
         }
-        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem}.${this.elementSelectors.active} {
+        .${this.elementSelectors.mainContainer} .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem}.${this.elementSelectors.active} {
           background-color: #eee;
         }
-        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesSymbol} {
+        .${this.elementSelectors.mainContainer} .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesSymbol} {
           width: 10px;
           margin-right: 10px;
           height: 10px;
           display: inline-flex;
           border-radius: 20px;
         }
-        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesName} {
+        .${this.elementSelectors.mainContainer} .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesName} {
           width: calc((100% - 20px) / 2);
           display: inline-flex;
           font-size: 14px;
           color: #333;
           position: relative;
         }
-        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesData} {
+        .${this.elementSelectors.mainContainer} .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesData} {
           width: calc((100% - 20px) / 2);
           display: inline-flex;
           font-size: 14px;
@@ -275,15 +302,19 @@ export class Chart3 {
           justify-content: flex-end;
         }
 
-        .${this.elementSelectors.svg} {
+        .${this.elementSelectors.mainContainer} .${this.elementSelectors.svg} {
           width: 100%;
           height: 100%;
           display: block;
           position: relative;
         }
-        .${this.elementSelectors.piePiece} {
+        .${this.elementSelectors.mainContainer} .${this.elementSelectors.piePiece} {
           position: relative;
         }
+
+        
+
+
       </style>
     `.trim();
   }

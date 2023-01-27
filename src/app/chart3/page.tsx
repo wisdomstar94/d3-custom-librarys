@@ -44,7 +44,7 @@ const FirstMakeChartPage = () => {
         chart3...
       </h2>
       <div>
-        <div id="target" style={{ width: '600px', position: 'relative', border: '1px solid #ccc' }}>
+        <div id="target" style={{ width: '50%', position: 'relative', border: '1px solid #ccc' }}>
 
         </div>
       </div>
