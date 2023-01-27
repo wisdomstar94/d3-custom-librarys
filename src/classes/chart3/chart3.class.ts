@@ -20,6 +20,7 @@ export class Chart3 {
     seriesSymbol: 'class_' + v4(),
     seriesName: 'class_' + v4(),
     seriesData: 'class_' + v4(),
+    active: 'class_' + v4(),
   };
   elements = {
     mainContainer: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.mainContainer),
@@ -33,8 +34,6 @@ export class Chart3 {
   defaultConfig = {
     leftAreaWidth: '50%',
     rightAreaWidth: '50%',
-    innerRadius: 50,
-    outerRadius: 100,
     pieMargin: 20,
     pieWeight: 40,
     maxAngle: 6.285, // arc 그릴 때, innerRadius의 값이 6.285 이면 360도!
@@ -55,18 +54,18 @@ export class Chart3 {
   /*
     getter function
   */
-  private getInnerRadius(): number {
-    if (this.options?.innerRadius === undefined) {
-      return this.defaultConfig.innerRadius;
+  private getLeftAreaWidth(): string {
+    if (this.options?.leftAreaWidth === undefined) {
+      return this.defaultConfig.leftAreaWidth;
     }
-    return this.options.innerRadius;
+    return this.options.leftAreaWidth;
   }
 
-  private getOuterRadius(): number {
-    if (this.options?.outerRadius === undefined) {
-      return this.defaultConfig.outerRadius;
+  private getRightAreaWidth(): string {
+    if (this.options?.rightAreaWidth === undefined) {
+      return this.defaultConfig.rightAreaWidth;
     }
-    return this.options.outerRadius;
+    return this.options.rightAreaWidth;
   }
 
   private getPieMargin(): number {
@@ -101,16 +100,20 @@ export class Chart3 {
   }
 
   /*
-    get create element return function 
+    get created element return function 
   */
-  getMainContainerElement() {
+  private getMainContainerElement() {
     return document.querySelector<HTMLElement>(`.${this.elementSelectors.mainContainer}`)
+  }
+
+  private getUlSeriesLiElements() {
+    return document.querySelectorAll<HTMLElement>(`.${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem}`);
   }
 
   /*
     insert element function
   */
-  insertBasicContainerStyles() {
+  private insertBasicContainerStyles() {
     const targetSelectorElement = this.getTargetSelectorElement();
     if (targetSelectorElement === null) {
       return;
@@ -118,7 +121,7 @@ export class Chart3 {
     targetSelectorElement.innerHTML = this.getStyleSheet();
   }
 
-  insertBasicContainers() {
+  private insertBasicContainers() {
     const targetSelectorElement = this.getTargetSelectorElement();
     if (targetSelectorElement === null) {
       return;
@@ -182,7 +185,7 @@ export class Chart3 {
   /*
     other function
   */
-  getStyleSheet(): string {
+  private getStyleSheet(): string {
     return `
       <style>
         .${this.elementSelectors.mainContainer} {
@@ -208,7 +211,7 @@ export class Chart3 {
           position: relative;
         }
         .${this.elementSelectors.mainContainer} .${this.elementSelectors.contentRow} .${this.elementSelectors.leftArea} {
-          width: 50%;
+          width: ${this.getLeftAreaWidth()};
           aspect-ratio: 1 / 0.8;
           display: flex;
           flex-wrap: wrap;
@@ -216,7 +219,7 @@ export class Chart3 {
           box-sizing: border-box;
         }
         .${this.elementSelectors.mainContainer} .${this.elementSelectors.contentRow} .${this.elementSelectors.rightArea} {
-          width: 50%;
+          width: ${this.getRightAreaWidth()};
           display: flex;
           flex-wrap: wrap;
           position: relative;
@@ -227,7 +230,7 @@ export class Chart3 {
           width: 100%;
           display: block;
           margin: 0;
-          padding: 14px;
+          padding: 12px;
           position: relative;
           box-sizing: border-box;
         }
@@ -239,31 +242,37 @@ export class Chart3 {
           align-items: center;
           align-content: center;
           justify-content: flex-start;
-          margin-botton: 10px;
+          box-sizing: border-box;
+          padding: 12px;
+          border-bottom: 1px solid #F2F4F3;
         }
         .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem}:last-child {
           margin-bottom: 0;
         }
+        .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem}.${this.elementSelectors.active} {
+          background-color: #eee;
+        }
         .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesSymbol} {
-          width: 6px;
-          height: 6px;
+          width: 10px;
+          margin-right: 10px;
+          height: 10px;
           display: inline-flex;
           border-radius: 20px;
-          margin-right: 10px;
         }
         .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesName} {
+          width: calc((100% - 20px) / 2);
           display: inline-flex;
-          margin-right: 10px;
-          font-size: 12px;
+          font-size: 14px;
           color: #333;
           position: relative;
         }
         .${this.elementSelectors.ulSeriesList} .${this.elementSelectors.listItem} .${this.elementSelectors.seriesData} {
+          width: calc((100% - 20px) / 2);
           display: inline-flex;
-          margin-right: 10px;
-          font-size: 12px;
+          font-size: 14px;
           color: #333;
           position: relative;
+          justify-content: flex-end;
         }
 
         .${this.elementSelectors.svg} {
@@ -282,7 +291,7 @@ export class Chart3 {
   /*
     draw function 
   */
-  drawPie(): void {
+  private drawPie(): void {
     const leftAreaSvg = this.elements.leftAreaSvg();
     if (leftAreaSvg === null) {
       return;
@@ -326,6 +335,7 @@ export class Chart3 {
           case 'mouseover': {
             const parentG = targetPath.parentElement;
             parentG?.insertAdjacentElement('beforeend', targetPath);
+            this.getUlSeriesLiElements()[index]?.classList.add(this.elementSelectors.active);
 
             select(targetPath)
             .transition()
@@ -352,6 +362,8 @@ export class Chart3 {
             ;
           } break;
           case 'mouseout': {
+            this.getUlSeriesLiElements()[index]?.classList.remove(this.elementSelectors.active);
+
             select(targetPath)
             .transition()
             .duration(100)
@@ -418,7 +430,7 @@ export class Chart3 {
     });
   }
 
-  drawSeries(): void {
+  private drawSeries(): void {
     const ulSeriesList = this.elements.ulSeriesList();
     if (ulSeriesList === null) {
       return;
@@ -427,6 +439,7 @@ export class Chart3 {
     this.options?.series?.forEach((item, index) => {
       const li = document.createElement('li');
       li.setAttribute('class', this.elementSelectors.listItem);
+      li.setAttribute('data-index', index.toString());
 
       const div_symbol = document.createElement('div');
       div_symbol.setAttribute('class', this.elementSelectors.seriesSymbol);

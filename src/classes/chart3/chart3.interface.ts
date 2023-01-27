@@ -11,6 +11,8 @@ export declare namespace IChart3 {
   }
 
   export interface Options {
+    leftAreaWidth?: string;
+    rightAreaWidth?: string;
     targetSelector?: string;
     series?: Series[];
     innerRadius?: number;
