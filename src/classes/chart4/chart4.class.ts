@@ -11,7 +11,10 @@ export class Chart4 {
     rightArea: 'right-area_' + v4(),
     ulHorizontalList: 'ul-horizontal-list_' + v4(),
     ulHorizontalItem: 'ul-horizontal-item_' + v4(),
-    dateDistanceButton: 'date-distance-button_' + v4(),
+    dateDistanceButtonItem: 'date-distance-button_' + v4(),
+    textWrapper: 'text_wrapper_' + v4(),
+    hiddenText: 'hidden_text_' + v4(),
+    text: 'text_' + v4(),
   };
   elements = {
     mainContainer: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.mainContainer),
@@ -123,15 +126,34 @@ export class Chart4 {
     for (const item of this.dateDistanceButtonItems) {
       const li = document.createElement('li');
       li.classList.add(this.elementSelectors.ulHorizontalItem);
+      li.classList.add(this.elementSelectors.dateDistanceButtonItem);
 
       const button = document.createElement('button');
-      button.classList.add(this.elementSelectors.dateDistanceButton);
-      button.textContent = item.name;
+      // button.textContent = item.name;
       button.setAttribute('data-value', item.value);
       button.addEventListener('click', () => {
         console.log('item', item);
       });
       li.appendChild(button);
+
+      /*
+        바로 button 밑에 text 를 넣어도 되는데 굳이 이렇게 wrapper, hidden, text 구조로 작성하는 이유는
+        hover 나 active 시 font 에 bold 효과가 추가되었을때 버튼의 width 크기가 변동되지 않게 하기 위함입니다. 
+      */
+      const button_text_wrapper = document.createElement('div');
+      button_text_wrapper.classList.add(this.elementSelectors.textWrapper);
+      button.appendChild(button_text_wrapper);
+
+      const hidden_text = document.createElement('div');
+      hidden_text.classList.add(this.elementSelectors.hiddenText);
+      hidden_text.textContent = item.name;
+      button_text_wrapper.appendChild(hidden_text);
+
+      const text = document.createElement('div');
+      text.classList.add(this.elementSelectors.text);
+      text.textContent = item.name;
+      button_text_wrapper.appendChild(text);
+
       ulHorizontalList_dateDistanceButtonList.appendChild(li);
     }
 
@@ -209,13 +231,48 @@ export class Chart4 {
           position: relative;
         }
 
-        .${this.elementSelectors.dateDistanceButton} {
+        .${this.elementSelectors.dateDistanceButtonItem} {
+          margin-right: 4px;
+        }
+        .${this.elementSelectors.dateDistanceButtonItem}:last-child {
+          margin-right: 0;
+        }
+        .${this.elementSelectors.dateDistanceButtonItem} > button {
           display: inline-flex;
           flex-wrap: wrap;
           position: relative;
           border: 0;
           background-color: rgba(255, 255, 255, 0);
           cursor: pointer;
+          margin: 0;
+          padding: 2px 6px;
+          border-radius: 4px;
+          color: #919AAB;
+        }
+        .${this.elementSelectors.dateDistanceButtonItem} > button:hover {
+          background-color: #E7EEFD;
+          color: #2650B0;
+          font-weight: bolder;
+        }
+
+        .${this.elementSelectors.textWrapper} {
+          display: inline-block;
+          position: relative;
+        }
+        .${this.elementSelectors.hiddenText} {
+          font-weight: 900;
+          color: rgba(0, 0, 0, 0);
+          z-index: -1;
+          position: relative;
+        }
+        .${this.elementSelectors.text} {
+          width: 100%;
+          height: 100%;
+          display: block;
+          text-align: center;
+          position: absolute;
+          top: 0;
+          left: 0;
         }
       </style>
     `.trim();
