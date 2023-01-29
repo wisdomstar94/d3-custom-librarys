@@ -1,11 +1,14 @@
 "use client";
 import { Chart3 } from "@/classes/chart3/chart3.class";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const FirstMakeChartPage = () => {
+  const myChart3 = useRef<Chart3>();
+
   useEffect(() => {
-    const myChart3 = new Chart3();
-    myChart3.setOptions((prev) => ({
+    myChart3.current = new Chart3();
+    const c = myChart3.current;
+    c.setOptions((prev) => ({
       ...(prev ?? {}),
       targetSelector: '#target',
       pieWeight: 50,
@@ -35,7 +38,11 @@ const FirstMakeChartPage = () => {
       ],
       boundaryMargin: 0.03,
     }));
-    myChart3.draw();
+    c.draw();
+
+    return () => {
+      c.clear();
+    };
   }, []);
 
   return (

@@ -518,4 +518,8 @@ export class Chart3 {
     this.drawPie();
     this.drawSeries();
   }
+
+  clear(): void {
+    this.windowResizeSubscription?.unsubscribe();
+  }
 }
