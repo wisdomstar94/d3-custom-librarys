@@ -1,6 +1,7 @@
 import { IChart4 } from "./chart4.interface";
 import { v4 } from 'uuid';
 import { debounceTime, fromEvent, Subscription } from 'rxjs';
+import { extent, merge, range, scaleLinear, select } from "d3";
 
 export class Chart4 {
   elementSelectors = {
@@ -22,7 +23,8 @@ export class Chart4 {
     svg: 'svg_' + v4(),
   };
   elements = {
-    mainContainer: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.mainContainer),
+    mainContainer: null as null | HTMLElement, 
+    leftAreaSvg: null as null | SVGSVGElement, 
   };
   defaultConfig = {
     windowMobileMaxWidth: 600,
@@ -30,8 +32,8 @@ export class Chart4 {
     yAxis: {
       width: 0,
       height: 200,
-      paddingTop: 5,
-      paddingBottom: 5,
+      paddingTop: 25,
+      paddingBottom: 15,
     },
   };
   dateDistanceButtonItems = [
@@ -72,10 +74,17 @@ export class Chart4 {
     getter function
   */
   private getYaxisWidth(): number {
+    let result = 0;
     if (this.options?.yAxis?.width === undefined) {
-      return this.defaultConfig.yAxis.width;
+      result = this.defaultConfig.yAxis.width;
+    } else {
+      result = this.options.yAxis.width;
     }
-    return this.options.yAxis.width;
+    if (result === 0) {
+      result = 1;
+    }
+
+    return result;
   }
 
   private getYaxisHeight(): number {
@@ -112,7 +121,6 @@ export class Chart4 {
   /*
     get created element return function 
   */
-  
 
   /*
     other function
@@ -229,6 +237,7 @@ export class Chart4 {
           padding-bottom: ${this.getYaxisPaddingBottom()}px;
           box-sizing: border-box;
           z-index: 2;
+          overflow: visible;
         }
 
         .${this.elementSelectors.textWrapper} {
@@ -254,9 +263,26 @@ export class Chart4 {
           width: 100%;
           height: 100%;
           position: relative;
+          overflow: visible;
         }
       </style>
     `.trim();
+  }
+
+  private getYRangeAndLinear() {
+    const allNumberDatas = merge<number>(this.options?.series?.map(x => x.data) ?? []);
+    let [minNumber, maxNumber] = extent(allNumberDatas);
+    if (minNumber === undefined) { minNumber = 0; }
+    if (maxNumber === undefined) { maxNumber = 0; }
+    const size = maxNumber - minNumber;
+
+    const yRange = range(minNumber, maxNumber, Math.ceil(size / 5)).concat(maxNumber);
+    const yLinear = scaleLinear().domain([minNumber, maxNumber]).range([this.elements.leftAreaSvg?.clientHeight ?? 0, 0]);
+
+    return {
+      yRange,
+      yLinear,
+    };
   }
 
   /*
@@ -384,12 +410,31 @@ export class Chart4 {
     const yaxis_area_svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     yaxis_area_svg.classList.add(this.elementSelectors.svg);
     yaxis_area.appendChild(yaxis_area_svg);
+    this.elements.leftAreaSvg = yaxis_area_svg;
 
     targetSelectorElement.appendChild(mainContainer);
   }
 
   private drawYaxis(): void {
-    
+    const yrl = this.getYRangeAndLinear();
+
+    select(this.elements.leftAreaSvg)
+    .append('g')
+    .selectAll()
+    .data(yrl.yRange)
+    .enter()
+    .append('text')
+    .text(d => d.toString())
+    .attr("x", (d, i) => {
+      return 7;
+    })
+    .attr("y", (d, i) => {
+      return yrl.yLinear(d) + 3;
+    })
+    .attr("font-family", "sans-serif")
+    .attr("font-size", '12px')
+    .attr('fill', '#E0E1E7')
+    ; 
   } 
 
   draw(): void {
