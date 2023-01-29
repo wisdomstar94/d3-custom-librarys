@@ -21,10 +21,14 @@ export class Chart4 {
     seriesText: 'series_text_' + v4(),
     yAxisArea: 'yaxis_area_' + v4(),
     svg: 'svg_' + v4(),
+    yaxisRightArea: 'yaxis_right_area_' + v4(),
+    chartRow: 'chart_row_' + v4(),
+    xAxisRow: 'xaxis_row_' + v4(),
   };
   elements = {
     mainContainer: null as null | HTMLElement, 
-    leftAreaSvg: null as null | SVGSVGElement, 
+    yAxisAreaSvg: null as null | SVGSVGElement, 
+    chartRowSvg: null as null | SVGSVGElement, 
   };
   defaultConfig = {
     windowMobileMaxWidth: 600,
@@ -240,6 +244,31 @@ export class Chart4 {
           overflow: visible;
         }
 
+        .${this.elementSelectors.yaxisRightArea} {
+          width: calc(100% - ${this.getYaxisWidth()}px);
+          display: block;
+          position: relative;
+          box-sizing: border-box;
+          z-index: 1;
+          overflow-x: scroll;
+        }
+        .${this.elementSelectors.yaxisRightArea} > .${this.elementSelectors.chartRow} {
+          width: auto;
+          height: ${this.getYaxisHeight()}px;
+          display: flex;
+          flex-wrap: nowrap;
+          position: relative;
+          padding-top: ${this.getYaxisPaddingTop()}px;
+          padding-bottom: ${this.getYaxisPaddingBottom()}px;
+          box-sizing: border-box;
+        }
+        .${this.elementSelectors.yaxisRightArea} > .${this.elementSelectors.xAxisRow} {
+          width: auto;
+          display: flex;
+          flex-wrap: nowrap;
+          position: relative;
+        }
+
         .${this.elementSelectors.textWrapper} {
           display: inline-block;
           position: relative;
@@ -277,7 +306,7 @@ export class Chart4 {
     const size = maxNumber - minNumber;
 
     const yRange = range(minNumber, maxNumber, Math.ceil(size / 5)).concat(maxNumber);
-    const yLinear = scaleLinear().domain([minNumber, maxNumber]).range([this.elements.leftAreaSvg?.clientHeight ?? 0, 0]);
+    const yLinear = scaleLinear().domain([minNumber, maxNumber]).range([this.elements.yAxisAreaSvg?.clientHeight ?? 0, 0]);
 
     return {
       yRange,
@@ -410,7 +439,28 @@ export class Chart4 {
     const yaxis_area_svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     yaxis_area_svg.classList.add(this.elementSelectors.svg);
     yaxis_area.appendChild(yaxis_area_svg);
-    this.elements.leftAreaSvg = yaxis_area_svg;
+    this.elements.yAxisAreaSvg = yaxis_area_svg;
+
+    // main-container ul-content-row-list li.chart-row yaxis-right-area
+    const yaxis_right_area = document.createElement('div');
+    yaxis_right_area.classList.add(this.elementSelectors.yaxisRightArea);
+    li_chartRow.appendChild(yaxis_right_area);
+
+    // main-container ul-content-row-list li.chart-row yaxis-right-area chart-row
+    const chart_row = document.createElement('div');
+    chart_row.classList.add(this.elementSelectors.chartRow);
+    yaxis_right_area.appendChild(chart_row);
+
+    // main-container ul-content-row-list li.chart-row yaxis-right-area chart-row svg
+    const chart_row_svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    chart_row_svg.classList.add(this.elementSelectors.svg);
+    chart_row.appendChild(chart_row_svg);
+    this.elements.chartRowSvg = chart_row_svg;
+
+    // main-container ul-content-row-list li.chart-row yaxis-right-area xaxis-row
+    const xaxis_row = document.createElement('div');
+    xaxis_row.classList.add(this.elementSelectors.xAxisRow);
+    yaxis_right_area.appendChild(xaxis_row);
 
     targetSelectorElement.appendChild(mainContainer);
   }
@@ -418,7 +468,7 @@ export class Chart4 {
   private drawYaxis(): void {
     const yrl = this.getYRangeAndLinear();
 
-    select(this.elements.leftAreaSvg)
+    select(this.elements.yAxisAreaSvg)
     .append('g')
     .selectAll()
     .data(yrl.yRange)
