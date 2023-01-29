@@ -6,9 +6,9 @@ export declare namespace IChart4 {
   }
 
   export interface Label {
-    text: string;
+    // text: string;
     date?: Date;
-    color?: string;
+    // color?: string;
     fontSize?: string;
   }
 
@@ -16,10 +16,20 @@ export declare namespace IChart4 {
     labels: Label[];
   }
 
+  export interface Yaxis {
+    unit?: string;
+    width?: number;
+    height?: number;
+    paddingTop?: number;
+    paddingBottom?: number;
+  }
+
   export interface Options {
     leftAreaWidth?: string;
     rightAreaWidth?: string;
     targetSelector?: string;
     series?: Series[];
+    xAxis?: Xaxis;
+    yAxis?: Yaxis;
   }
 }

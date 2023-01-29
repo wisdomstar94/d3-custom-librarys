@@ -1,5 +1,6 @@
 "use client";
 import { Chart4 } from "@/classes/chart4/chart4.class";
+import { randomInt, timeFormat } from "d3";
 import { useEffect, useRef } from "react";
 
 const FirstMakeChartPage = () => {
@@ -8,21 +9,36 @@ const FirstMakeChartPage = () => {
   useEffect(() => {
     myChart4.current = new Chart4();
     const c = myChart4.current;
+
+    const randomFn = randomInt(100);
     c.setOptions((prev) => ({
       ...( prev ?? {} ),
       targetSelector: '#target',
       series: [
         {
           name: 'angular',
-          data: [10, 5, 40, 20, 15],
+          data: Array.from({ length: 700 }).map((item, index) => {
+            return randomFn();
+          }),
           color: '#f00',
         },
         {
           name: 'react',
-          data: [3, 8, 25, 50, 36],
+          data: Array.from({ length: 700 }).map((item, index) => {
+            return randomFn();
+          }),
           color: '#00f',
         },
-      ]
+      ],
+      xAxis: {
+        labels: Array.from({ length: 700 }).map((item, index) => {
+          const date = new Date();
+          date.setHours(date.getHours() - (index));
+          return {
+            date,
+          };
+        }),
+      }
     }));
     c.draw();
     return () => {
