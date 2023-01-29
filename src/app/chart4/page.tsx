@@ -11,6 +11,18 @@ const FirstMakeChartPage = () => {
     c.setOptions((prev) => ({
       ...( prev ?? {} ),
       targetSelector: '#target',
+      series: [
+        {
+          name: 'angular',
+          data: [10, 5, 40, 20, 15],
+          color: '#f00',
+        },
+        {
+          name: 'react',
+          data: [3, 8, 25, 50, 36],
+          color: '#00f',
+        },
+      ]
     }));
     c.draw();
     return () => {

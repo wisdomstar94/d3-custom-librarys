@@ -15,12 +15,16 @@ export class Chart4 {
     textWrapper: 'text_wrapper_' + v4(),
     hiddenText: 'hidden_text_' + v4(),
     text: 'text_' + v4(),
+    seriesItem: 'series_item_' + v4(),
+    seriesSymbol: 'series_symbol' + v4(),
+    seriesText: 'series_text' + v4(),
   };
   elements = {
     mainContainer: () => document.querySelector<HTMLElement>('.' + this.elementSelectors.mainContainer),
   };
   defaultConfig = {
     windowMobileMaxWidth: 600,
+    color: '#333',
   };
   dateDistanceButtonItems = [
     { name: '1H', value: '1H' },
@@ -162,6 +166,30 @@ export class Chart4 {
     rightArea.classList.add(this.elementSelectors.rightArea);
     li_topRow.appendChild(rightArea);
 
+    // main-container ul-content-row-list li.top-row right-area ul-horizontal-list
+    const ulHorizontalList_series_list = document.createElement('ul');
+    ulHorizontalList_series_list.classList.add(this.elementSelectors.ulHorizontalList);
+    ulHorizontalList_series_list.setAttribute('data-element-name', 'series-list');
+    rightArea.appendChild(ulHorizontalList_series_list);
+
+    for (const item of this.options?.series ?? []) {
+      const li = document.createElement('li');
+      li.classList.add(this.elementSelectors.ulHorizontalItem);
+      li.classList.add(this.elementSelectors.seriesItem);
+      
+      const symbol = document.createElement('div');
+      symbol.classList.add(this.elementSelectors.seriesSymbol);
+      symbol.style.backgroundColor = item.color ?? this.defaultConfig.color;
+      li.appendChild(symbol);
+
+      const seriesText = document.createElement('div');
+      seriesText.classList.add(this.elementSelectors.seriesText);
+      seriesText.textContent = item.name;
+      li.appendChild(seriesText);
+
+      ulHorizontalList_series_list.appendChild(li);
+    }
+
     targetSelectorElement.appendChild(mainContainer);
   }
 
@@ -225,8 +253,7 @@ export class Chart4 {
         .${this.elementSelectors.ulHorizontalList} > .${this.elementSelectors.ulHorizontalItem} {
           display: inline-flex;
           flex-wrap: wrap;
-          position: relative;
-          align-items: stretch;
+          align-items: center;
           align-content: center;
           position: relative;
         }
@@ -253,6 +280,23 @@ export class Chart4 {
           background-color: #E7EEFD;
           color: #2650B0;
           font-weight: bolder;
+        }
+        .${this.elementSelectors.seriesItem} {
+          margin-right: 20px;
+        }
+        .${this.elementSelectors.seriesItem}:last-child {
+          margin-right: 0;
+        }
+        .${this.elementSelectors.seriesItem} > .${this.elementSelectors.seriesSymbol} {
+          width: 8px;
+          height: 8px;
+          display: inline-flex;
+          border-radius: 20px;
+          margin-right: 6px;
+        }
+        .${this.elementSelectors.seriesItem} > .${this.elementSelectors.seriesText} {
+          display: inline-flex;
+          color: #919AAB;
         }
 
         .${this.elementSelectors.textWrapper} {
