@@ -1,7 +1,7 @@
 import { IChart4 } from "./chart4.interface";
 import { v4 } from 'uuid';
 import { debounceTime, fromEvent, Subscription } from 'rxjs';
-import { extent, merge, range, scaleLinear, select } from "d3";
+import { area, extent, merge, range, scaleLinear, select } from "d3";
 
 export class Chart4 {
   elementSelectors = {
@@ -39,14 +39,15 @@ export class Chart4 {
       paddingTop: 25,
       paddingBottom: 15,
     },
+    dateDistance: 'ALL' as IChart4.DateDistance,
   };
-  dateDistanceButtonItems = [
-    { name: '1H', value: '1H' },
-    { name: '1D', value: '1D' },
-    { name: '1W', value: '1W' },
-    { name: '1M', value: '1M' },
-    { name: '1Y', value: '1Y' },
-    { name: 'ALL', value: 'ALL' },
+  dateDistanceButtonItems: IChart4.DateDistanceButtonItem[] = [
+    { name: '1H', dateDistance: '1H' },
+    { name: '1D', dateDistance: '1D' },
+    { name: '1W', dateDistance: '1W' },
+    { name: '1M', dateDistance: '1M' },
+    { name: '1Y', dateDistance: '1Y' },
+    { name: 'ALL', dateDistance: 'ALL' },
   ];
   options?: IChart4.Options;
   windowResizeSubscription?: Subscription;
@@ -110,6 +111,38 @@ export class Chart4 {
       return this.defaultConfig.yAxis.paddingBottom;
     }
     return this.options.yAxis.paddingBottom;
+  }
+
+  private getDateDistance(): IChart4.DateDistance {
+    if (this.options?.dateDistance === undefined) {
+      return this.defaultConfig.dateDistance;
+    }
+    return this.options.dateDistance;
+  }
+
+  private getDataOneColumnWidth(): number {
+    switch (this.getDateDistance()) {
+      case 'ALL': return 4;
+      case '1H': return 8;
+      case '1D': return 12;
+      case '1W': return 16;
+      case '1M': return 20;
+      case '1Y': return 24;
+      default: return 24;
+    }
+  }
+
+  private getDataLength(): number {
+    if (this.options?.series === undefined) {
+      return 0;
+    }
+
+    const targetSeries = this.options.series[0];
+    if (targetSeries === undefined) {
+      return 0;
+    }
+
+    return targetSeries.data.length;
   }
 
   /*
@@ -368,7 +401,7 @@ export class Chart4 {
 
       const button = document.createElement('button');
       // button.textContent = item.name;
-      button.setAttribute('data-value', item.value);
+      button.setAttribute('data-date-distance', item.dateDistance);
       button.addEventListener('click', () => {
         console.log('item', item);
       });
@@ -449,6 +482,7 @@ export class Chart4 {
     // main-container ul-content-row-list li.chart-row yaxis-right-area chart-row
     const chart_row = document.createElement('div');
     chart_row.classList.add(this.elementSelectors.chartRow);
+    chart_row.style.width = (this.getDataLength() * this.getDataOneColumnWidth()) + 'px';
     yaxis_right_area.appendChild(chart_row);
 
     // main-container ul-content-row-list li.chart-row yaxis-right-area chart-row svg
@@ -487,9 +521,36 @@ export class Chart4 {
     ; 
   } 
 
+  private drawChart(): void {
+    if (this.elements.chartRowSvg === null) {
+      return;
+    }
+    const yrl = this.getYRangeAndLinear();
+
+    this.options?.series?.forEach((item, index) => {
+      const areas = area<IChart4.Point>()
+        .x(d => d.x) // 좌표의 x 값
+        .y0(this.elements.yAxisAreaSvg?.clientHeight ?? 0) // 영역을 그리는 y 축의 기준 값 (이 축을 기준으로 상, 하 영역이 구분됨.)
+        .y1(d => d.y) // 좌표의 y 값
+      ; 
+
+      select(this.elements.chartRowSvg)
+      .append("path")
+      .attr("d", areas(item.data.map((value, i) => {
+        return {
+          y: yrl.yLinear(value),
+          x: (this.getDataOneColumnWidth() * i),
+        };
+      })))
+      .attr("fill", item.color ?? this.defaultConfig.color)
+      .attr("stroke", "black");
+    });
+  }
+
   draw(): void {
     this.drawBasicContainers();
     this.drawYaxis();
+    this.drawChart();
   }
 
   clear(): void {
