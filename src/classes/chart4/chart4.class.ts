@@ -1,7 +1,7 @@
 import { IChart4 } from "./chart4.interface";
 import { v4 } from 'uuid';
 import { debounceTime, fromEvent, Subscription } from 'rxjs';
-import { area, extent, line, merge, range, scaleLinear, select } from "d3";
+import { area, extent, line, merge, range, scaleLinear, select, timeFormat } from "d3";
 
 export class Chart4 {
   elementSelectors = {
@@ -25,17 +25,19 @@ export class Chart4 {
     chartRow: 'chart_row_' + v4(),
     xAxisRow: 'xaxis_row_' + v4(),
     active: 'active_' + v4(),
+    xAxisLabelItem: 'x_axis_label_item_' + v4(),
   };
   elements = {
     mainContainer: null as null | HTMLElement, 
     yAxisAreaSvg: null as null | SVGSVGElement, 
     chartRowSvg: null as null | SVGSVGElement, 
+    xAxisRow: null as null | HTMLElement, 
   };
   defaultConfig = {
     windowMobileMaxWidth: 600,
     color: '#333',
     yAxis: {
-      width: 0,
+      width: 30,
       height: 200,
       paddingTop: 25,
       paddingBottom: 15,
@@ -123,7 +125,7 @@ export class Chart4 {
   }
 
   private getDataOneColumnWidth(): number {
-    return 20;
+    return 80;
 
     // switch (this.getDateDistance()) {
     //   case 'ALL': return 4;
@@ -149,6 +151,25 @@ export class Chart4 {
     return targetSeries.data.length;
   }
 
+  private getFormat() {
+    let format = timeFormat('%y.%m.%d');
+    switch (this.getDateDistance()) {
+      case '1D': 
+        format = timeFormat('%y-%m-%d');
+        break;
+      case '1W': 
+        format = timeFormat('%y-%m-%d');
+        break;
+      case '1M': 
+        format = timeFormat('%y-%m');
+        break;
+      case '1Y': 
+        format = timeFormat('%Y');
+        break;
+    }
+    return format;
+  }
+
   /*
     get rendered element return functions
   */
@@ -158,10 +179,6 @@ export class Chart4 {
     }
     return document.querySelector<HTMLElement>(this.options.targetSelector);
   }
-
-  /*
-    get created element return function 
-  */
 
   /*
     other function
@@ -175,7 +192,7 @@ export class Chart4 {
           position: relative;
           font-size: 12px;
           box-sizing: border-box;
-          padding: 14px;
+          padding: 22px;
         }
         .${this.elementSelectors.ulContentRowList} {
           width: 100%;
@@ -278,16 +295,20 @@ export class Chart4 {
           width: ${this.getYaxisWidth()}px;
           height: ${this.getYaxisHeight()}px;
           display: block;
-          position: relative;
+          position: absolute;
           padding-top: ${this.getYaxisPaddingTop()}px;
           padding-bottom: ${this.getYaxisPaddingBottom()}px;
           box-sizing: border-box;
           z-index: 2;
           overflow: visible;
+          top: 0;
+          left: 0;
         }
 
         .${this.elementSelectors.yaxisRightArea} {
-          width: calc(100% - ${this.getYaxisWidth()}px);
+          // width: calc(100% - ${this.getYaxisWidth()}px);
+          width: 100%;
+          padding-left: ${this.getYaxisWidth()}px;
           display: block;
           position: relative;
           box-sizing: border-box;
@@ -306,9 +327,20 @@ export class Chart4 {
         }
         .${this.elementSelectors.yaxisRightArea} > .${this.elementSelectors.xAxisRow} {
           width: auto;
-          display: flex;
+          display: inline-flex;
           flex-wrap: nowrap;
           position: relative;
+          box-sizing: border-box;
+          // padding-left: ${this.getYaxisWidth()}px;
+        }
+        .${this.elementSelectors.xAxisLabelItem} {
+          width: ${this.getDataOneColumnWidth()}px;
+          font-size: 10px;
+          display: inline-block;
+          text-align: center;
+        }
+        .${this.elementSelectors.xAxisLabelItem}:first-child {
+          margin-left: -${this.getDataOneColumnWidth() / 2}px;
         }
 
         .${this.elementSelectors.textWrapper} {
@@ -545,6 +577,7 @@ export class Chart4 {
     const xaxis_row = document.createElement('div');
     xaxis_row.classList.add(this.elementSelectors.xAxisRow);
     yaxis_right_area.appendChild(xaxis_row);
+    this.elements.xAxisRow = xaxis_row;
 
     targetSelectorElement.appendChild(mainContainer);
   }
@@ -616,10 +649,30 @@ export class Chart4 {
     });
   }
 
+  private drawXaxis(): void {
+    if (this.elements.xAxisRow === null) {
+      return;
+    }
+
+    const format = this.getFormat();
+    let htmlString = '';
+    this.options?.xAxis?.labels.forEach((item, index) => {
+
+      htmlString += `
+        <div class="${this.elementSelectors.xAxisLabelItem}" data-index="${index}">
+          ${ format(item.date ?? new Date()) }
+        </div>
+      `.trim();
+    });
+    
+    this.elements.xAxisRow.innerHTML = htmlString;
+  }
+
   draw(): void {
     this.drawBasicContainers();
     this.drawYaxis();
     this.drawChart();
+    this.drawXaxis();
   }
 
   clear(): void {

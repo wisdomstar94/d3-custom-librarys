@@ -74,8 +74,10 @@ const FirstMakeChartPage = () => {
       ...( prev ?? {} ),
       targetSelector: '#target',
       series: sampleData.series,
+      dateDistance: '1D',
       yAxis: {
         fontColor: '#888',
+        // width: 20,
       },
       xAxis: {
         labels: sampleData.xAxisLabels,

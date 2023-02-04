@@ -46,8 +46,8 @@ export declare namespace IChart4 {
   }
 
   export interface Options {
-    leftAreaWidth?: string;
-    rightAreaWidth?: string;
+    // leftAreaWidth?: string;
+    // rightAreaWidth?: string;
     targetSelector?: string;
     series?: Series[];
     xAxis?: Xaxis;
