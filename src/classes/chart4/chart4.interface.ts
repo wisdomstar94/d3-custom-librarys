@@ -21,7 +21,7 @@ export declare namespace IChart4 {
   }
 
   export interface Label {
-    // text: string;
+    text: string;
     date?: Date;
     // color?: string;
     fontSize?: string;
@@ -37,6 +37,7 @@ export declare namespace IChart4 {
     height?: number;
     paddingTop?: number;
     paddingBottom?: number;
+    fontColor?: string;
   }
 
   export interface Point {

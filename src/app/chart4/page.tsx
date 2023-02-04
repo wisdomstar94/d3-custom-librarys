@@ -1,53 +1,104 @@
 "use client";
 import { Chart4 } from "@/classes/chart4/chart4.class";
+import { IChart4 } from "@/classes/chart4/chart4.interface";
 import { randomInt, timeFormat } from "d3";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
+
+const randomFn = randomInt(100);
 
 const FirstMakeChartPage = () => {
   const myChart4 = useRef<Chart4>();
 
-  useEffect(() => {
-    myChart4.current = new Chart4();
-    const c = myChart4.current;
+  const getSeriesAndLabels = useCallback((dateDistance: IChart4.DateDistance) => {
+    let length = 700;
+    switch (dateDistance) {
+      case '1D': length = 300; break;
+      case '1W': length = 100; break;
+      case '1M': length = 50; break;
+      case '1Y': length = 10; break;
+    }
 
-    const randomFn = randomInt(100);
-    c.setOptions((prev) => ({
-      ...( prev ?? {} ),
-      targetSelector: '#target',
+    return {
       series: [
         {
           name: 'angular',
-          data: Array.from({ length: 700 }).map((item, index) => {
+          data: Array.from({ length }).map((item, index) => {
             return randomFn();
           }),
           color: '#f00',
         },
         {
           name: 'react',
-          data: Array.from({ length: 700 }).map((item, index) => {
+          data: Array.from({ length }).map((item, index) => {
             return randomFn();
           }),
           color: '#00f',
         },
       ],
+      xAxisLabels: Array.from({ length }).map((item, index) => {
+        const date = new Date();
+        // date.setHours(date.getHours() + (index));
+        let format = timeFormat('%y-%m-%d %H:%M');
+        switch (dateDistance) {
+          case '1D': 
+            date.setDate(date.getDate() + (index)); 
+            format = timeFormat('%y-%m-%d');
+            break;
+          case '1W': 
+            date.setDate(date.getDate() + (index * 7)); 
+            format = timeFormat('%y-%m-%d');
+            break;
+          case '1M': 
+            date.setMonth(date.getMonth() + (index)); 
+            format = timeFormat('%y-%m');
+            break;
+          case '1Y': 
+            date.setFullYear(date.getFullYear() + (index)); 
+            format = timeFormat('%Y');
+            break;
+        }
+        return {
+          date,
+          text: format(date),
+        };
+      }),
+    };
+  }, []);
+
+  useEffect(() => {
+    myChart4.current = new Chart4();
+    const c = myChart4.current;
+    const sampleData = getSeriesAndLabels('1H');
+    
+    c.setOptions((prev) => ({
+      ...( prev ?? {} ),
+      targetSelector: '#target',
+      series: sampleData.series,
+      yAxis: {
+        fontColor: '#888',
+      },
       xAxis: {
-        labels: Array.from({ length: 700 }).map((item, index) => {
-          const date = new Date();
-          date.setHours(date.getHours() + (index));
-          return {
-            date,
-          };
-        }),
+        labels: sampleData.xAxisLabels,
       },
       onDateDistanceButtonClick(dateDistance) {
         console.log('@onDateDistanceButtonClick.dateDistance', dateDistance);
+        const sampleData2 = getSeriesAndLabels(dateDistance);
+        c.setOptions((prev2) => ({
+          ...( prev2 ?? {}),
+          series: sampleData2.series,
+          xAxis: {
+            ...( prev2?.xAxis ?? {}),
+            labels: sampleData2.xAxisLabels,
+          },
+        }));
+        c.draw();
       },
     }));
     c.draw();
     return () => {
       c.clear();
     };
-  }, []);
+  }, [getSeriesAndLabels]);
 
   return (
     <>

@@ -24,6 +24,7 @@ export class Chart4 {
     yaxisRightArea: 'yaxis_right_area_' + v4(),
     chartRow: 'chart_row_' + v4(),
     xAxisRow: 'xaxis_row_' + v4(),
+    active: 'active_' + v4(),
   };
   elements = {
     mainContainer: null as null | HTMLElement, 
@@ -38,6 +39,7 @@ export class Chart4 {
       height: 200,
       paddingTop: 25,
       paddingBottom: 15,
+      fontColor: '#E0E1E7',
     },
     dateDistance: 'ALL' as IChart4.DateDistance,
   };
@@ -121,17 +123,17 @@ export class Chart4 {
   }
 
   private getDataOneColumnWidth(): number {
-    return 24;
+    return 20;
 
-    switch (this.getDateDistance()) {
-      case 'ALL': return 4;
-      case '1H': return 8;
-      case '1D': return 12;
-      case '1W': return 16;
-      case '1M': return 20;
-      case '1Y': return 24;
-      default: return 24;
-    }
+    // switch (this.getDateDistance()) {
+    //   case 'ALL': return 4;
+    //   case '1H': return 8;
+    //   case '1D': return 12;
+    //   case '1W': return 16;
+    //   case '1M': return 20;
+    //   case '1Y': return 24;
+    //   default: return 24;
+    // }
   }
 
   private getDataLength(): number {
@@ -243,6 +245,11 @@ export class Chart4 {
           padding: 2px 6px;
           border-radius: 4px;
           color: #919AAB;
+        }
+        .${this.elementSelectors.dateDistanceButtonItem}.${this.elementSelectors.active} > button {
+          background-color: #E2EDFE;
+          color: #2D61D8;
+          font-weight: bolder;
         }
         .${this.elementSelectors.dateDistanceButtonItem} > button:hover {
           background-color: #E7EEFD;
@@ -431,11 +438,17 @@ export class Chart4 {
       const li = document.createElement('li');
       li.classList.add(this.elementSelectors.ulHorizontalItem);
       li.classList.add(this.elementSelectors.dateDistanceButtonItem);
+      if (item.dateDistance === this.getDateDistance()) {
+        li.classList.add(this.elementSelectors.active);
+      }
 
       const button = document.createElement('button');
       // button.textContent = item.name;
       button.setAttribute('data-date-distance', item.dateDistance);
       button.addEventListener('click', () => {
+        if (this.options !== undefined) {
+          this.options.dateDistance = item.dateDistance;
+        }
         if (typeof this.options?.onDateDistanceButtonClick === 'function') {
           this.options?.onDateDistanceButtonClick(item.dateDistance);
         }
@@ -554,7 +567,7 @@ export class Chart4 {
     })
     .attr("font-family", "sans-serif")
     .attr("font-size", '12px')
-    .attr('fill', '#E0E1E7')
+    .attr('fill', this.options?.yAxis?.fontColor ?? this.defaultConfig.yAxis.fontColor)
     ; 
   } 
 
