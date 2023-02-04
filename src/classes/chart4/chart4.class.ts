@@ -1,7 +1,7 @@
 import { IChart4 } from "./chart4.interface";
 import { v4 } from 'uuid';
 import { debounceTime, fromEvent, Subscription } from 'rxjs';
-import { area, extent, merge, range, scaleLinear, select } from "d3";
+import { area, extent, line, merge, range, scaleLinear, select } from "d3";
 
 export class Chart4 {
   elementSelectors = {
@@ -121,6 +121,8 @@ export class Chart4 {
   }
 
   private getDataOneColumnWidth(): number {
+    return 24;
+
     switch (this.getDateDistance()) {
       case 'ALL': return 4;
       case '1H': return 8;
@@ -348,6 +350,37 @@ export class Chart4 {
   }
 
   /*
+    getter def
+  */
+  private getGradientDef(id: string, color: string) {
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+
+    const linearGradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    linearGradient.setAttribute('id', id);
+    linearGradient.setAttribute('x1', '0%');
+    linearGradient.setAttribute('y1', '0%');
+    linearGradient.setAttribute('x2', '0%');
+    linearGradient.setAttribute('y2', '100%');
+    defs.appendChild(linearGradient);
+
+    const stops = [
+      { offset: '0%', stopColor: color, stopOpacity: '0.2' },
+      // { offset: '33%', stopColor: color, stopOpacity: '0.7' },
+      // { offset: '66%', stopColor: color, stopOpacity: '0' },
+      { offset: '100%', stopColor: color, stopOpacity: '0' },
+    ];
+    for (const item of stops) {
+      const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+      stop.setAttribute('offset', item.offset);
+      stop.style.stopColor = item.stopColor;
+      stop.style.stopOpacity = item.stopOpacity;
+      linearGradient.appendChild(stop);  
+    }
+
+    return defs;
+  }
+
+  /*
     draw function 
   */
   private drawBasicContainers() {
@@ -403,7 +436,10 @@ export class Chart4 {
       // button.textContent = item.name;
       button.setAttribute('data-date-distance', item.dateDistance);
       button.addEventListener('click', () => {
-        console.log('item', item);
+        if (typeof this.options?.onDateDistanceButtonClick === 'function') {
+          this.options?.onDateDistanceButtonClick(item.dateDistance);
+        }
+        // console.log('item', item);
       });
       li.appendChild(button);
 
@@ -472,6 +508,7 @@ export class Chart4 {
     const yaxis_area_svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     yaxis_area_svg.classList.add(this.elementSelectors.svg);
     yaxis_area.appendChild(yaxis_area_svg);
+
     this.elements.yAxisAreaSvg = yaxis_area_svg;
 
     // main-container ul-content-row-list li.chart-row yaxis-right-area
@@ -528,11 +565,15 @@ export class Chart4 {
     const yrl = this.getYRangeAndLinear();
 
     this.options?.series?.forEach((item, index) => {
+      // (1) area
       const areas = area<IChart4.Point>()
         .x(d => d.x) // 좌표의 x 값
         .y0(this.elements.yAxisAreaSvg?.clientHeight ?? 0) // 영역을 그리는 y 축의 기준 값 (이 축을 기준으로 상, 하 영역이 구분됨.)
         .y1(d => d.y) // 좌표의 y 값
       ; 
+
+      const gradient_id = 'id_' + v4();
+      this.elements.chartRowSvg?.appendChild(this.getGradientDef(gradient_id, item.color ?? this.defaultConfig.color));
 
       select(this.elements.chartRowSvg)
       .append("path")
@@ -542,8 +583,23 @@ export class Chart4 {
           x: (this.getDataOneColumnWidth() * i),
         };
       })))
-      .attr("fill", item.color ?? this.defaultConfig.color)
-      .attr("stroke", "black");
+      .attr("fill", `url(#${gradient_id})`)
+      ;
+
+      // (2) stroke
+      const lineGenerator = line();
+      const points: [number, number][] = item.data.map((value, i) => {
+        return [(this.getDataOneColumnWidth() * i), yrl.yLinear(value)];
+      });
+    
+      const pathOfLine = lineGenerator(points);
+    
+      select(this.elements.chartRowSvg)
+      .append('path')
+      .attr('d', pathOfLine)
+      .attr("fill", "none")
+      .attr("stroke", item.color ?? this.defaultConfig.color)
+      ;
     });
   }
 

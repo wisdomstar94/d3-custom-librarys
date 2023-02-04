@@ -33,12 +33,15 @@ const FirstMakeChartPage = () => {
       xAxis: {
         labels: Array.from({ length: 700 }).map((item, index) => {
           const date = new Date();
-          date.setHours(date.getHours() - (index));
+          date.setHours(date.getHours() + (index));
           return {
             date,
           };
         }),
-      }
+      },
+      onDateDistanceButtonClick(dateDistance) {
+        console.log('@onDateDistanceButtonClick.dateDistance', dateDistance);
+      },
     }));
     c.draw();
     return () => {

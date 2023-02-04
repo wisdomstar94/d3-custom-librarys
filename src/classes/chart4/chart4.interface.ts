@@ -52,5 +52,6 @@ export declare namespace IChart4 {
     xAxis?: Xaxis;
     yAxis?: Yaxis;
     dateDistance?: DateDistance;
+    onDateDistanceButtonClick?: (dateDistance: DateDistance) => void;
   }
 }
