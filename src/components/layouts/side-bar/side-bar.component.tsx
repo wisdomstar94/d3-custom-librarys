@@ -9,7 +9,8 @@ export default function SideBar(props: ISideBar.Props) {
   const router = useRouter();
 
   const [menuItems, setMenuItems] = useState<ISideBar.MenuItem[]>([
-    { name: '첫번째로 만들어보는 차트', link: '/first-make-chart' },
+    { name: 'axis-test-1', link: '/axis-test-1' },
+    { name: 'first-make-chart', link: '/first-make-chart' },
     { name: 'chart2', link: '/chart2' },
     { name: 'chart3', link: '/chart3' },
     { name: 'chart4', link: '/chart4' },
