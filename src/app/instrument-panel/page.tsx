@@ -320,6 +320,9 @@ export default function Page() {
             strokeWidthAngle : <input className="inline-flex border border-gray-500 px-1" type="number" value={strokeWidthAngle} onChange={e => setStrokeWidthAngle(Number(e.target.value))} />
           </li>
           <li className="w-full relative">
+            strokeWeight : <input className="inline-flex border border-gray-500 px-1" type="number" value={strokeWeight} onChange={e => setStrokeWeight(Number(e.target.value))} />
+          </li>
+          <li className="w-full relative">
             cornerRadius : <input className="inline-flex border border-gray-500 px-1" type="number" value={cornerRadius} onChange={e => setCornerRadius(Number(e.target.value))} />
           </li>
           <li className="w-full relative">
