@@ -9,11 +9,11 @@ export default function SideBar(props: ISideBar.Props) {
   const router = useRouter();
 
   const [menuItems, setMenuItems] = useState<ISideBar.MenuItem[]>([
-    { name: 'axis-test-1', link: '/axis-test-1' },
-    { name: 'first-make-chart', link: '/first-make-chart' },
     { name: 'chart2', link: '/chart2' },
     { name: 'chart3', link: '/chart3' },
     { name: 'chart4', link: '/chart4' },
+    { name: 'first-make-chart', link: '/first-make-chart' },
+    { name: 'half-arc', link: '/half-arc' },
   ]);
 
   const menuItemClick = useCallback((item: ISideBar.MenuItem) => {

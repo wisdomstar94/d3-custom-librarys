@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: `axis-test-1`,
+  title: `half-arc`,
 };
 
 export default function Layout({
