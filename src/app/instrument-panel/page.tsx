@@ -19,6 +19,7 @@ export default function Page() {
   const [minimumValue, setMinimumValue] = useState(0);
   const [maximumValue, setMaximumValue] = useState(150);
   const [value, setValue] = useState(120);
+  const [valueUnit, setValueUnit] = useState('km/h');
   const [cornerRadius, setCornerRadius] = useState(14);
   const [startFillColor, setStartFillColor] = useState('#87e9ff');
   const [endFillColor, setEndFillColor] = useState('#e5880d');
@@ -176,6 +177,66 @@ export default function Page() {
       })
     ;
 
+    const gValueDisplayContainer = g
+      .selectAll(`g[data-title='value-display-container']`)
+      .data([NaN])
+      .join(
+        enter => enter.append('g'),
+        update => update.attr('data-timestamp', Date.now().toString()),
+        exit => exit.remove(),
+      )
+      .attr('data-title', 'value-display-container')
+    ;
+
+    const centerTextContainer = gValueDisplayContainer
+      .selectAll(`text[data-title='center-text-container']`)
+      .data([value])
+      .join(
+        enter => enter.append('text'),
+        update => update.attr('data-timestamp', Date.now().toString()),
+        exit => exit.remove(),
+      )
+      .attr('data-title', 'center-text-container')
+      // .text(value)
+      // .attr("font-family", "sans-serif")
+      // .attr("font-size", "56px")
+      // .attr("fill", "black")
+      .attr("text-anchor", "middle")
+    ;
+
+    centerTextContainer
+      .selectAll(`tspan[data-title='text-value']`)
+      .data([value])
+      .join(
+        enter => enter.append('tspan'),
+        update => update.attr('data-timestamp', Date.now().toString()),
+        exit => exit.remove(),
+      )
+      .attr('data-title', 'text-value')
+      .text(value)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "56px")
+      .attr("fill", "#888")
+    ;
+
+    centerTextContainer
+      .selectAll(`tspan[data-title='text-value-unit']`)
+      .data([value])
+      .join(
+        enter => enter.append('tspan'),
+        update => update.attr('data-timestamp', Date.now().toString()),
+        exit => exit.remove(),
+      )
+      .attr('data-title', 'text-value-unit')
+      .text(valueUnit)
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "22px")
+      .attr("fill", "#888")
+      .attr('dx', 6)
+    ;
+      // .attr("text-anchor", "middle")
+
+
     // select(svg)
     //   .selectAll(`path[data-title='center-circle-bg']`)
     //   .data([NaN])
@@ -208,7 +269,7 @@ export default function Page() {
     //   .attr('data-title', 'arrow-container')
     //   .selectAll(``)
     // ;
-  }, [cornerRadius, endFillColor, maximumValue, minimumValue, padding, startFillColor, strokeWeight, strokeWidthAngle, unitAngle, unitCount, value]);
+  }, [cornerRadius, endFillColor, maximumValue, minimumValue, padding, startFillColor, strokeWeight, strokeWidthAngle, unitAngle, unitCount, value, valueUnit]);
 
   useAddEventListener({
     windowEventRequiredInfo: {
