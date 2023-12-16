@@ -14,6 +14,7 @@ export default function SideBar(props: ISideBar.Props) {
     { name: 'chart4', link: '/chart4' },
     { name: 'first-make-chart', link: '/first-make-chart' },
     { name: 'half-arc', link: '/half-arc' },
+    { name: 'instrument-panel', link: '/instrument-panel' },
   ]);
 
   const menuItemClick = useCallback((item: ISideBar.MenuItem) => {
