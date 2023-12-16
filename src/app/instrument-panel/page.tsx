@@ -1,7 +1,7 @@
 "use client"
 
 import { useAddEventListener } from "@wisdomstar94/react-add-event-listener";
-import { arc, select } from "d3";
+import { arc, interpolate, scaleLinear, select } from "d3";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // https://www.pinterest.co.kr/pin/311241024259236439/
@@ -20,6 +20,8 @@ export default function Page() {
   const [maximumValue, setMaximumValue] = useState(150);
   const [value, setValue] = useState(120);
   const [cornerRadius, setCornerRadius] = useState(14);
+  const [startFillColor, setStartFillColor] = useState('#87e9ff');
+  const [endFillColor, setEndFillColor] = useState('#e5880d');
 
   const drawChart = useCallback(() => {
     const svg = svgRef.current;
@@ -114,6 +116,8 @@ export default function Page() {
         }
         // const filledStartAngle = filledAngle.startAngle;
 
+        const intr = interpolate(startFillColor, endFillColor);
+
         select(node)
           .attr(
             'd', 
@@ -124,7 +128,7 @@ export default function Page() {
               .endAngle(filledAngle.endAngle)
               .cornerRadius(cornerRadius)
           )
-          .style('fill', '#f00')
+          .style('fill', intr(angleInfo.getEndColorOpacity(index)))
           // .attr('transform', `translate(${translateX}, ${translateY})`)
         ;
       })
@@ -204,7 +208,7 @@ export default function Page() {
     //   .attr('data-title', 'arrow-container')
     //   .selectAll(``)
     // ;
-  }, [cornerRadius, maximumValue, minimumValue, padding, strokeWeight, strokeWidthAngle, unitAngle, unitCount, value]);
+  }, [cornerRadius, endFillColor, maximumValue, minimumValue, padding, startFillColor, strokeWeight, strokeWidthAngle, unitAngle, unitCount, value]);
 
   useAddEventListener({
     windowEventRequiredInfo: {
@@ -245,6 +249,24 @@ export default function Page() {
           <li className="w-full relative">
             maximum : <input className="inline-flex border border-gray-500 px-1" type="number" value={maximumValue} onChange={e => setMaximumValue(Number(e.target.value))} />
           </li>
+          <li className="w-full relative">
+            unitCount : <input className="inline-flex border border-gray-500 px-1" type="number" value={unitCount} onChange={e => setUnitCount(Number(e.target.value))} />
+          </li>
+          <li className="w-full relative">
+            unitAngle : <input className="inline-flex border border-gray-500 px-1" type="number" value={unitAngle} onChange={e => setUnitAngle(Number(e.target.value))} />
+          </li>
+          <li className="w-full relative">
+            strokeWidthAngle : <input className="inline-flex border border-gray-500 px-1" type="number" value={strokeWidthAngle} onChange={e => setStrokeWidthAngle(Number(e.target.value))} />
+          </li>
+          <li className="w-full relative">
+            cornerRadius : <input className="inline-flex border border-gray-500 px-1" type="number" value={cornerRadius} onChange={e => setCornerRadius(Number(e.target.value))} />
+          </li>
+          <li className="w-full relative">
+            startFillColor : <input className="inline-flex border border-gray-500 px-1" type="text" value={startFillColor} onChange={e => setStartFillColor(e.target.value)} />
+          </li>
+          <li className="w-full relative">
+            endFillColor : <input className="inline-flex border border-gray-500 px-1" type="text" value={endFillColor} onChange={e => setEndFillColor(e.target.value)} />
+          </li>
         </ul>
       </div>
     </>
@@ -276,7 +298,7 @@ function getAngleInfo(params: {
   const totalEmptyAngleValue = strokeWidthAngle - (unitCount * unitAngle);
   const emptyUnitAngle = totalEmptyAngleValue / (unitCount - 1);
 
-  const startAngle = -((strokeWidthAngle + unitAngle) / 2);
+  const startAngle = -((strokeWidthAngle) / 2);
 
   console.log('@startAngle', startAngle);
 
@@ -291,6 +313,15 @@ function getAngleInfo(params: {
     return undefined;
   }
 
+  const endColorOpacityGenerator = scaleLinear()
+    .domain([0, unitCount - 1])
+    .range([0, 1])
+  ;
+
+  function getEndColorOpacity(index: number) {
+    return endColorOpacityGenerator(index);
+  }
+
   return {
     totalEmptyAngleValue,
     emptyUnitAngle,
@@ -298,6 +329,7 @@ function getAngleInfo(params: {
     totalDeg,
     startDeg,
     getFillAngleInfo,
+    getEndColorOpacity,
   };
 }
 
