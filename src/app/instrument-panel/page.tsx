@@ -34,7 +34,7 @@ export default function Page() {
     const width = svg.clientWidth;
     const height = svg.clientHeight;
 
-    console.log(`@drawArc`);
+    // console.log(`@drawArc`);
 
     const minLength = Math.min(...[width, height]);
     
@@ -111,7 +111,7 @@ export default function Page() {
         const endAngle = startAngle + unitAngle;
         
         const filledAngle = angleInfo.getFillAngleInfo(startAngle, endAngle, value);
-        console.log('@filledAngle', filledAngle);
+        // console.log('@filledAngle', filledAngle);
 
         if (filledAngle === undefined) {
           select(node).remove();
@@ -207,18 +207,18 @@ export default function Page() {
           .range([0, maximumValue])
         ;
 
-        console.log('@@[0, unitCount - 1]', [0, unitCount - 1]);
-        console.log('@@[0, maximumValue]', [0, maximumValue]);
-        console.log(`@valueLineDataLinearGenerator(${index})`, valueLineDataLinearGenerator(index));
+        // console.log('@@[0, unitCount - 1]', [0, unitCount - 1]);
+        // console.log('@@[0, maximumValue]', [0, maximumValue]);
+        // console.log(`@valueLineDataLinearGenerator(${index})`, valueLineDataLinearGenerator(index));
 
         const distance = outerRadius - padding - (strokeWeight + unitAndLinePeriod + lineStrokeWeight);
         const currentIndexAtValue = valueLineDataLinearGenerator(index);
         const degInfo = angleInfo.getDegInfo(startAngle, endAngle, currentIndexAtValue, distance);
-        console.log('@@@@', {
-          distance,
-          startAngle,
-          endAngle,
-        });
+        // console.log('@@@@', {
+        //   distance,
+        //   startAngle,
+        //   endAngle,
+        // });
 
         select(node)
           .selectAll(`text[data-title='value-line-data']`)
@@ -515,11 +515,11 @@ function getAngleInfo(params: {
   // const startAngle = -((strokeWidthAngle) / 2);
   const startAngle = Math.PI + (((Math.PI * 2) - strokeWidthAngle) / 2);
 
-  console.log('@startAngle', startAngle);
+  // console.log('@startAngle', startAngle);
 
   function getFillAngleInfo(angle1: number, angle2: number, value: number): { startAngle: number; endAngle: number; } | undefined {
     const valueFilledAngle = startAngle + (strokeWidthAngle * (getPercent(maximumValue, value) / 100));
-    console.log('@valueFilledAngle', valueFilledAngle);
+    // console.log('@valueFilledAngle', valueFilledAngle);
     if (angle1 <= valueFilledAngle && angle2 <= valueFilledAngle) {
       return { startAngle: angle1, endAngle: angle2 };
     } else if (angle1 <= valueFilledAngle && angle2 > valueFilledAngle) {
@@ -539,8 +539,8 @@ function getAngleInfo(params: {
 
   function getDegInfo(angle1: number, angle2: number, value: number, distance: number) {
     const angleArea = getAngleArea(angle1, angle2);
-    console.log('@angle1, angle1', `${angle1},${angle2}`);
-    console.log('@angleArea', angleArea);
+    // console.log('@angle1, angle1', `${angle1},${angle2}`);
+    // console.log('@angleArea', angleArea);
 
     const valuePercent = getPercent(maximumValue, value);
     const deg = totalDeg * (valuePercent / 100);
@@ -614,7 +614,7 @@ function getAngleArea(angle1: number, angle2: number) {
   let realAngle2 = realAngle1 + period;
 
   const middleAngle = realAngle1 + (period / 2);
-  console.log('@@@middleAngle', middleAngle);
+  // console.log('@@@middleAngle', middleAngle);
 
   if (middleAngle >= 0 && middleAngle <= (Math.PI / 2)) {
     return 'right-up';
